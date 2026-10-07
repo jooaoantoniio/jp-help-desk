@@ -1,8 +1,87 @@
 <div class="page-header">
   <div>
     <h1>Meu perfil</h1>
-    <p>Seus dados e troca de senha.</p>
+    <p>Seus dados de acesso e troca de senha.</p>
   </div>
 </div>
 
-<div class="card">Tela em constru&ccedil;&atilde;o &mdash; ser&aacute; implementada na Fase 15.</div>
+<div class="grade">
+  @if (usuario(); as u) {
+    <section class="card dados" aria-labelledby="titulo-dados">
+      <div class="dados__topo">
+        <span class="avatar" aria-hidden="true">{{ iniciais() }}</span>
+        <div>
+          <h2 id="titulo-dados">{{ u.nome }}</h2>
+          <app-perfil-badge [perfil]="u.perfil" />
+        </div>
+      </div>
+
+      <dl>
+        <dt>E-mail</dt>
+        <dd>{{ u.email }}</dd>
+        <dt>Cadastrado em</dt>
+        <dd>{{ u.criadoEm | date: "dd/MM/yyyy" }}</dd>
+      </dl>
+
+      <p class="dica">
+        <mat-icon aria-hidden="true">info</mat-icon>
+        Para alterar nome, e-mail ou perfil, fale com um administrador.
+      </p>
+    </section>
+  }
+
+  <form class="card senha" [formGroup]="form" #formDiretiva="ngForm" (ngSubmit)="alterarSenha(formDiretiva)" novalidate
+    aria-labelledby="titulo-senha">
+    @if (salvando()) {
+      <mat-progress-bar mode="indeterminate" class="senha__progresso" />
+    }
+
+    <h2 id="titulo-senha">Alterar senha</h2>
+
+    @if (erro(); as mensagem) {
+      <div class="aviso aviso--erro" role="alert">
+        <mat-icon aria-hidden="true">error</mat-icon>
+        <span>{{ mensagem }}</span>
+      </div>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Senha atual</mat-label>
+      <input matInput [type]="mostrarSenhas() ? 'text' : 'password'" formControlName="senhaAtual" autocomplete="current-password" />
+      @if (form.controls.senhaAtual.hasError('required')) {
+        <mat-error>Informe a senha atual.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nova senha</mat-label>
+      <input matInput [type]="mostrarSenhas() ? 'text' : 'password'" formControlName="novaSenha"
+        [maxlength]="limiteSenha" autocomplete="new-password" />
+      @if (form.controls.novaSenha.hasError('required')) {
+        <mat-error>Informe a nova senha.</mat-error>
+      } @else if (form.controls.novaSenha.hasError('senhaFraca')) {
+        <mat-error>A senha não atende a todos os requisitos.</mat-error>
+      }
+    </mat-form-field>
+    <app-forca-senha [senha]="form.controls.novaSenha.value" />
+
+    <mat-form-field appearance="outline">
+      <mat-label>Confirme a nova senha</mat-label>
+      <input matInput [type]="mostrarSenhas() ? 'text' : 'password'" formControlName="confirmacao"
+        [maxlength]="limiteSenha" autocomplete="new-password" />
+      @if (form.controls.confirmacao.hasError('required')) {
+        <mat-error>Repita a nova senha.</mat-error>
+      } @else if (form.controls.confirmacao.hasError('senhasDiferentes')) {
+        <mat-error>As senhas não conferem.</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="senha__acoes">
+      <button mat-button type="button" (click)="mostrarSenhas.update((v) => !v)" [attr.aria-pressed]="mostrarSenhas()">
+        <mat-icon>{{ mostrarSenhas() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        {{ mostrarSenhas() ? 'Ocultar senhas' : 'Mostrar senhas' }}
+      </button>
+      <button mat-flat-button type="submit" [disabled]="salvando()">Alterar senha</button>
+    </div>
+  </form>
+</div>
