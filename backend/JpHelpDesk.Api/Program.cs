@@ -1,4 +1,7 @@
 using JpHelpDesk.Api.Data;
+using JpHelpDesk.Api.Exceptions;
+using JpHelpDesk.Api.Repositories;
+using JpHelpDesk.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +20,14 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn
 // Relógio do sistema injetável: facilita testar código que depende de data/hora.
 builder.Services.AddSingleton(TimeProvider.System);
 
+// Repositórios e serviços (Scoped = uma instância por requisição HTTP).
+builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
+builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+
+// Erros retornados no formato padrão ProblemDetails (RFC 9457).
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 // Documento OpenAPI nativo do .NET (servido em /openapi/v1.json).
 builder.Services.AddOpenApi(options =>
 {
@@ -32,6 +43,11 @@ builder.Services.AddOpenApi(options =>
 var app = builder.Build();
 
 // ---------- Pipeline HTTP (a ordem dos middlewares importa) ----------
+
+// Primeiro da fila: captura exceções de todos os middlewares seguintes.
+app.UseExceptionHandler();
+// Respostas de erro sem corpo (ex.: 404 de rota inexistente) também viram ProblemDetails.
+app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
