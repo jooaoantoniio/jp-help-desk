@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { RouterLink } from '@angular/router';
 import { PERFIL_LABEL } from '../../../models/enums';
+import { iniciais } from '../../../models/usuario';
 import { AuthService } from '../../../services/auth.service';
 
 /** Barra superior: botão de menu (mobile), ação "Novo chamado" e menu do usuário logado. */
@@ -23,13 +24,7 @@ export class Header {
 
   protected readonly usuario = this.auth.usuario;
 
-  /** Iniciais para o avatar (ex.: "Técnico de Suporte" -> "TS"). */
-  protected readonly iniciais = computed(() => {
-    const partes = (this.usuario()?.nome ?? '').trim().split(/\s+/).filter(Boolean);
-    const primeira = partes.at(0)?.[0] ?? '';
-    const ultima = partes.length > 1 ? (partes.at(-1)?.[0] ?? '') : '';
-    return (primeira + ultima).toUpperCase();
-  });
+  protected readonly iniciais = computed(() => iniciais(this.usuario()?.nome ?? ''));
 
   protected readonly perfil = computed(() => {
     const perfil = this.usuario()?.perfil;

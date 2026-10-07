@@ -53,6 +53,6 @@ export const TIPO_HISTORICO_LABEL: Record<TipoHistorico, string> = {
 };
 
 /** Classe CSS do badge (ex.: EM_ATENDIMENTO -> "status-em-atendimento"). */
-export function classeBadge(prefixo: 'status' | 'prioridade', valor: string): string {
+export function classeBadge(prefixo: 'status' | 'prioridade' | 'perfil', valor: string): string {
   return `${prefixo}-${valor.toLowerCase().replaceAll('_', '-')}`;
 }

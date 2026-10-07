@@ -59,6 +59,48 @@ body {
       color: var(--jp-prioridade-#{$valor}-fg);
     }
   }
+
+  // Perfil do usuário e situação (ativo/inativo) reaproveitam as cores de status.
+  &.perfil-admin {
+    background: var(--jp-status-aguardando-usuario-bg);
+    color: var(--jp-status-aguardando-usuario-fg);
+  }
+
+  &.perfil-tecnico {
+    background: var(--jp-status-aberto-bg);
+    color: var(--jp-status-aberto-fg);
+  }
+
+  &.perfil-usuario,
+  &.situacao-inativo {
+    background: var(--jp-status-fechado-bg);
+    color: var(--jp-status-fechado-fg);
+  }
+
+  &.situacao-ativo {
+    background: var(--jp-status-resolvido-bg);
+    color: var(--jp-status-resolvido-fg);
+  }
+}
+
+// Mensagem em destaque dentro de cards e formulários: <div class="aviso aviso--erro">.
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.aviso--erro {
+  background: var(--jp-status-cancelado-bg);
+  color: var(--jp-status-cancelado-fg);
+}
+
+.aviso--info {
+  background: var(--jp-status-aberto-bg);
+  color: var(--jp-status-aberto-fg);
 }
 
 // Cartão branco padrão das páginas.

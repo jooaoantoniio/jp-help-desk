@@ -29,3 +29,11 @@ export interface UsuarioFiltro extends Paginacao {
   perfil?: PerfilUsuario;
   ativo?: boolean;
 }
+
+/** Iniciais para avatar (ex.: "Técnico de Suporte" -> "TS"). */
+export function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/).filter(Boolean);
+  const primeira = partes.at(0)?.[0] ?? '';
+  const ultima = partes.length > 1 ? (partes.at(-1)?.[0] ?? '') : '';
+  return (primeira + ultima).toUpperCase();
+}
