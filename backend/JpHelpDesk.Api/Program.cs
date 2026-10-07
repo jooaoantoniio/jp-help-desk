@@ -92,6 +92,14 @@ var app = builder.Build();
 
 // ---------- Inicialização ----------
 
+// Em contêiner não há um "dotnet ef database update" manual: o docker-compose liga esta opção
+// para a API criar/atualizar o banco ao subir. Desligada por padrão.
+if (app.Configuration.GetValue<bool>("Banco:AplicarMigracoesNaInicializacao"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+}
+
 if (app.Environment.IsDevelopment())
 {
     // Fora de uma requisição não existe escopo: criamos um para usar serviços Scoped.
