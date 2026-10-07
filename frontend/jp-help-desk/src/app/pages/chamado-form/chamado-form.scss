@@ -1,0 +1,44 @@
+.formulario {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 860px;
+  overflow: hidden;
+}
+
+.formulario__progresso {
+  position: absolute;
+  inset: 0 0 auto;
+}
+
+.formulario__linha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0 16px;
+}
+
+.formulario__acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.aviso--erro {
+  background: var(--jp-status-cancelado-bg);
+  color: var(--jp-status-cancelado-fg);
+}
+
+.aviso--info {
+  background: var(--jp-status-aberto-bg);
+  color: var(--jp-status-aberto-fg);
+}

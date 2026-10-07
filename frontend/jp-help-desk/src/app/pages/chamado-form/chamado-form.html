@@ -1,8 +1,95 @@
 <div class="page-header">
   <div>
-    <h1>Chamado</h1>
-    <p>Abertura e edi&ccedil;&atilde;o de chamados.</p>
+    <h1>{{ editando() ? 'Editar chamado #' + id() : 'Novo chamado' }}</h1>
+    <p>
+      {{ editando() ? 'Atualize as informações do chamado.' : 'Descreva o problema com o máximo de detalhes para agilizar o atendimento.' }}
+    </p>
   </div>
 </div>
 
-<div class="card">Tela em constru&ccedil;&atilde;o &mdash; ser&aacute; implementada na Fase 14.</div>
+@if (erroCarregamento(); as mensagem) {
+  <div class="card aviso aviso--erro" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    <span>{{ mensagem }}</span>
+    <a mat-button routerLink="/chamados">Voltar para a lista</a>
+  </div>
+} @else {
+  <form class="card formulario" [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+    @if (chamado.isLoading() || salvando()) {
+      <mat-progress-bar mode="indeterminate" class="formulario__progresso" />
+    }
+
+    @if (bloqueio(); as motivo) {
+      <div class="aviso aviso--info" role="status">
+        <mat-icon aria-hidden="true">lock</mat-icon>
+        <span>{{ motivo }}</span>
+      </div>
+    }
+
+    @if (erro(); as mensagem) {
+      <div class="aviso aviso--erro" role="alert">
+        <mat-icon aria-hidden="true">error</mat-icon>
+        <span>{{ mensagem }}</span>
+      </div>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Título</mat-label>
+      <input matInput formControlName="titulo" [maxlength]="limites.tituloMax" placeholder="Ex.: Impressora do financeiro não imprime" />
+      <mat-hint align="end">{{ form.controls.titulo.value.length }}/{{ limites.tituloMax }}</mat-hint>
+      @if (form.controls.titulo.hasError('required')) {
+        <mat-error>Informe o título.</mat-error>
+      } @else if (form.controls.titulo.hasError('minlength')) {
+        <mat-error>O título deve ter pelo menos {{ limites.tituloMin }} caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="formulario__linha">
+      <mat-form-field appearance="outline">
+        <mat-label>Categoria</mat-label>
+        <mat-select formControlName="categoriaId">
+          @for (categoria of categorias(); track categoria.id) {
+            <mat-option [value]="categoria.id">{{ categoria.nome }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.categoriaId.hasError('required')) {
+          <mat-error>Selecione a categoria.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Prioridade</mat-label>
+        <mat-select formControlName="prioridade">
+          @for (opcao of prioridades; track opcao[0]) {
+            <mat-option [value]="opcao[0]">{{ opcao[1] }}</mat-option>
+          }
+        </mat-select>
+        <mat-hint>Use "Crítica" apenas quando o trabalho estiver parado.</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Descrição</mat-label>
+      <textarea
+        matInput
+        formControlName="descricao"
+        rows="8"
+        [maxlength]="limites.descricaoMax"
+        placeholder="O que aconteceu? Desde quando? Aparece alguma mensagem de erro?"
+      ></textarea>
+      <mat-hint align="end">{{ form.controls.descricao.value.length }}/{{ limites.descricaoMax }}</mat-hint>
+      @if (form.controls.descricao.hasError('required')) {
+        <mat-error>Descreva o problema.</mat-error>
+      } @else if (form.controls.descricao.hasError('minlength')) {
+        <mat-error>A descrição deve ter pelo menos {{ limites.descricaoMin }} caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="formulario__acoes">
+      <a mat-button [routerLink]="voltar()">Cancelar</a>
+      <button mat-flat-button type="submit" [disabled]="salvando() || !!bloqueio() || chamado.isLoading()">
+        {{ salvando() ? 'Salvando...' : editando() ? 'Salvar alterações' : 'Abrir chamado' }}
+      </button>
+    </div>
+  </form>
+}
