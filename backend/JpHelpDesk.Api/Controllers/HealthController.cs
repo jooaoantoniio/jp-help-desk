@@ -1,4 +1,5 @@
 using JpHelpDesk.Api.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JpHelpDesk.Api.Controllers;
@@ -7,6 +8,7 @@ namespace JpHelpDesk.Api.Controllers;
 /// Verificação de disponibilidade da API.
 /// </summary>
 [ApiController]
+[AllowAnonymous]
 [Route("api/health")]
 [Produces("application/json")]
 public class HealthController(IWebHostEnvironment environment, TimeProvider timeProvider) : ControllerBase

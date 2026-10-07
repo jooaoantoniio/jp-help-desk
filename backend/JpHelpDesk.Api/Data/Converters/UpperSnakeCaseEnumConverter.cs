@@ -9,5 +9,5 @@ namespace JpHelpDesk.Api.Data.Converters;
 /// </summary>
 public class UpperSnakeCaseEnumConverter<TEnum>() : ValueConverter<TEnum, string>(
     value => value.ToApiString(),
-    text => Enum.Parse<TEnum>(text.Replace("_", string.Empty), true))
+    text => EnumExtensions.FromApiString<TEnum>(text))
     where TEnum : struct, Enum;

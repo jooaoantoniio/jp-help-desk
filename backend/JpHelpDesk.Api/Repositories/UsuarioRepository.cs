@@ -47,6 +47,12 @@ public class UsuarioRepository(AppDbContext context) : IUsuarioRepository
     public Task<int> ContarAtivosPorPerfilAsync(PerfilUsuario perfil, CancellationToken cancellationToken) =>
         context.Usuarios.CountAsync(u => u.Ativo && u.Perfil == perfil, cancellationToken);
 
+    public Task<PerfilUsuario?> ObterPerfilSeAtivoAsync(int id, CancellationToken cancellationToken) =>
+        context.Usuarios
+            .Where(u => u.Id == id && u.Ativo)
+            .Select(u => (PerfilUsuario?)u.Perfil)
+            .FirstOrDefaultAsync(cancellationToken);
+
     public void Adicionar(Usuario usuario) => context.Usuarios.Add(usuario);
 
     public Task SalvarAlteracoesAsync(CancellationToken cancellationToken) =>

@@ -9,4 +9,10 @@ public static class EnumExtensions
     /// </summary>
     public static string ToApiString<TEnum>(this TEnum valor) where TEnum : struct, Enum =>
         JsonNamingPolicy.SnakeCaseUpper.ConvertName(valor.ToString());
+
+    /// <summary>
+    /// Converte o texto da API/banco de volta para o enum (ex.: "EM_ATENDIMENTO" -> EmAtendimento).
+    /// </summary>
+    public static TEnum FromApiString<TEnum>(string texto) where TEnum : struct, Enum =>
+        Enum.Parse<TEnum>(texto.Replace("_", string.Empty), ignoreCase: true);
 }

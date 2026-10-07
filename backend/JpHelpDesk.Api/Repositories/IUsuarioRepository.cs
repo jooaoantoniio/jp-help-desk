@@ -12,6 +12,9 @@ public interface IUsuarioRepository
     Task<Usuario?> ObterPorEmailAsync(string email, CancellationToken cancellationToken);
     Task<bool> EmailExisteAsync(string email, int? ignorarId, CancellationToken cancellationToken);
     Task<int> ContarAtivosPorPerfilAsync(PerfilUsuario perfil, CancellationToken cancellationToken);
+
+    /// <summary>Perfil atual do usuário, ou null se ele não existir ou estiver inativo.</summary>
+    Task<PerfilUsuario?> ObterPerfilSeAtivoAsync(int id, CancellationToken cancellationToken);
     void Adicionar(Usuario usuario);
     Task SalvarAlteracoesAsync(CancellationToken cancellationToken);
 }

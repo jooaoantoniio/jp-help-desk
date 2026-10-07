@@ -3,12 +3,13 @@ using System.Text.Json.Serialization;
 using JpHelpDesk.Api.Data;
 using JpHelpDesk.Api.Data.Seed;
 using JpHelpDesk.Api.Exceptions;
+using JpHelpDesk.Api.Infrastructure.Authentication;
 using JpHelpDesk.Api.Infrastructure.ModelBinding;
+using JpHelpDesk.Api.Infrastructure.OpenApi;
 using JpHelpDesk.Api.Repositories;
 using JpHelpDesk.Api.Services;
 using JpHelpDesk.Api.Services.Security;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,9 +42,9 @@ builder.Services.AddSingleton(TimeProvider.System);
 // Segurança: hash de senha (sem estado, pode ser Singleton).
 builder.Services.AddSingleton<ISenhaHasher, BCryptSenhaHasher>();
 
-// Usuário da requisição atual. TEMPORÁRIO: cabeçalho X-Usuario-Id até a autenticação JWT (Fase 9).
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IUsuarioAtual, UsuarioAtualPorCabecalho>();
+// Autenticação JWT, autorização (protegido por padrão), usuário atual e limite de tentativas de login.
+builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Repositórios e serviços (Scoped = uma instância por requisição HTTP).
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
@@ -72,23 +73,8 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 
-    // TEMPORÁRIO (até a Fase 9): exibe o cabeçalho X-Usuario-Id no Swagger para as rotas de chamados.
-    options.AddOperationTransformer((operation, context, _) =>
-    {
-        if (context.Description.RelativePath?.StartsWith("api/chamados") == true)
-        {
-            operation.Parameters ??= [];
-            operation.Parameters.Add(new OpenApiParameter
-            {
-                Name = UsuarioAtualPorCabecalho.Cabecalho,
-                In = ParameterLocation.Header,
-                Required = false,
-                Description = "ID do usuário que está realizando a ação (temporário, até a autenticação JWT).",
-                Schema = new OpenApiSchema { Type = JsonSchemaType.Integer }
-            });
-        }
-        return Task.CompletedTask;
-    });
+    // Botão "Authorize" do Swagger para enviar o token JWT.
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
 });
 
 var app = builder.Build();
@@ -111,7 +97,8 @@ app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // A documentação é pública em desenvolvimento (a política padrão exige login).
+    app.MapOpenApi().AllowAnonymous();
 
     // Interface do Swagger lendo o documento OpenAPI gerado acima.
     app.UseSwaggerUI(options =>
@@ -123,6 +110,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRateLimiter();
+
+// Autenticação (quem é você?) sempre antes da autorização (o que você pode fazer?).
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
