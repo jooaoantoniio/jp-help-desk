@@ -1,0 +1,102 @@
+// Estilos das telas de listagem administrativa (usuários e categorias).
+// Uso no SCSS do componente: @use 'listagem';
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  mat-form-field {
+    flex: 1 1 180px;
+  }
+
+  .filtros__busca {
+    flex: 3 1 260px;
+  }
+}
+
+.resultados {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+}
+
+.resultados__progresso {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+}
+
+.resultados__estado {
+  padding: 48px 16px;
+  color: var(--jp-text-muted);
+  text-align: center;
+
+  mat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 40px;
+  }
+}
+
+.tabela {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+  }
+
+  td.mat-mdc-cell {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
+.tabela__principal,
+.tabela__secundario {
+  display: block;
+}
+
+.tabela__principal {
+  font-weight: 500;
+}
+
+.tabela__secundario {
+  margin: 2px 0 6px;
+  color: var(--jp-text-muted);
+  font-size: 13px;
+}
+
+.tabela__data {
+  white-space: nowrap;
+}
+
+.tabela__vazio {
+  color: var(--jp-text-muted);
+}
+
+.tabela__acoes {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+}
+
+// Linha de registro inativo fica esmaecida (as ações continuam com contraste normal).
+.tabela__inativa td:not(.tabela__acoes) {
+  color: var(--jp-text-muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tabela__botoes {
+  display: flex;
+  justify-content: flex-end;
+}
