@@ -1,0 +1,92 @@
+// Tema do Angular Material (Material 3) com a paleta do JP Help Desk,
+// gerada a partir da cor da marca (#0f4c81) por `ng generate @angular/material:theme-color`.
+@use '@angular/material' as mat;
+@use './styles/theme-colors' as theme;
+@use './styles/tokens';
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: theme.$primary-palette,
+        tertiary: theme.$tertiary-palette,
+      ),
+      typography: Inter,
+      density: 0,
+    )
+  );
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--jp-content-bg);
+  color: var(--jp-text);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// ---------- Utilitários globais ----------
+
+// Badge de status/prioridade: <span class="badge" [attr.data-valor]="...">.
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+
+  @each $valor in aberto, em-atendimento, aguardando-usuario, resolvido, fechado, cancelado {
+    &.status-#{$valor} {
+      background: var(--jp-status-#{$valor}-bg);
+      color: var(--jp-status-#{$valor}-fg);
+    }
+  }
+
+  @each $valor in critica, alta, media, baixa {
+    &.prioridade-#{$valor} {
+      background: var(--jp-prioridade-#{$valor}-bg);
+      color: var(--jp-prioridade-#{$valor}-fg);
+    }
+  }
+}
+
+// Cartão branco padrão das páginas.
+.card {
+  background: var(--jp-surface);
+  border: 1px solid var(--jp-border);
+  border-radius: var(--jp-radius);
+  box-shadow: var(--jp-shadow);
+  padding: 20px;
+}
+
+// Cabeçalho padrão das páginas (título + ações).
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+    font-weight: 600;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--jp-text-muted);
+  }
+}

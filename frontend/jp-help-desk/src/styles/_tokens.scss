@@ -1,0 +1,45 @@
+// Design tokens do JP Help Desk: cores e medidas reutilizadas por todo o sistema.
+// Expostos como variáveis CSS (custom properties) para uso em qualquer componente.
+
+:root {
+  // Marca e layout
+  --jp-primary: #0f4c81;
+  --jp-primary-dark: #0b3a63;
+  --jp-sidebar-bg: #0b1f33;
+  --jp-sidebar-text: #c7d3e0;
+  --jp-sidebar-active: #1d4f7c;
+  --jp-content-bg: #f4f6f9;
+  --jp-surface: #ffffff;
+  --jp-border: #e2e8f0;
+  --jp-text: #1e293b;
+  --jp-text-muted: #64748b;
+
+  --jp-radius: 10px;
+  --jp-shadow: 0 1px 3px rgb(15 23 42 / 8%), 0 1px 2px rgb(15 23 42 / 4%);
+  --jp-sidebar-width: 248px;
+  --jp-header-height: 64px;
+
+  // Status do chamado (fundo claro + texto escuro, contraste AA)
+  --jp-status-aberto-bg: #dbeafe;
+  --jp-status-aberto-fg: #1e40af;
+  --jp-status-em-atendimento-bg: #fef3c7;
+  --jp-status-em-atendimento-fg: #92400e;
+  --jp-status-aguardando-usuario-bg: #ede9fe;
+  --jp-status-aguardando-usuario-fg: #5b21b6;
+  --jp-status-resolvido-bg: #dcfce7;
+  --jp-status-resolvido-fg: #166534;
+  --jp-status-fechado-bg: #e2e8f0;
+  --jp-status-fechado-fg: #334155;
+  --jp-status-cancelado-bg: #fee2e2;
+  --jp-status-cancelado-fg: #991b1b;
+
+  // Prioridade
+  --jp-prioridade-critica-bg: #fee2e2;
+  --jp-prioridade-critica-fg: #b91c1c;
+  --jp-prioridade-alta-bg: #ffedd5;
+  --jp-prioridade-alta-fg: #c2410c;
+  --jp-prioridade-media-bg: #fef9c3;
+  --jp-prioridade-media-fg: #854d0e;
+  --jp-prioridade-baixa-bg: #e2e8f0;
+  --jp-prioridade-baixa-fg: #475569;
+}
