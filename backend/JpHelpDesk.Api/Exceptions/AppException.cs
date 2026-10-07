@@ -17,6 +17,10 @@ public class RecursoNaoEncontradoException(string message)
 public class ConflitoException(string message)
     : AppException(message, StatusCodes.Status409Conflict, "Conflito");
 
+/// <summary>Requisição sem usuário autenticado válido (HTTP 401).</summary>
+public class NaoAutenticadoException(string message)
+    : AppException(message, StatusCodes.Status401Unauthorized, "Não autenticado");
+
 /// <summary>Operação que viola uma regra de negócio (HTTP 400).</summary>
 public class RegraNegocioException(string message)
     : AppException(message, StatusCodes.Status400BadRequest, "Regra de negócio violada");

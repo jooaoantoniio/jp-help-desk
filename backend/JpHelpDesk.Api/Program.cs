@@ -3,10 +3,12 @@ using System.Text.Json.Serialization;
 using JpHelpDesk.Api.Data;
 using JpHelpDesk.Api.Data.Seed;
 using JpHelpDesk.Api.Exceptions;
+using JpHelpDesk.Api.Infrastructure.ModelBinding;
 using JpHelpDesk.Api.Repositories;
 using JpHelpDesk.Api.Services;
 using JpHelpDesk.Api.Services.Security;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +18,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Números não são aceitos, para evitar valores inválidos como "perfil": 99.
 var enumConverter = new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper, allowIntegerValues: false);
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        // Enums na query string/rota no mesmo formato do JSON (ex.: ?status=EM_ATENDIMENTO).
+        options.ModelBinderProviders.Insert(0, new UpperSnakeCaseEnumModelBinderProvider());
+    })
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(enumConverter));
 
 // O gerador do OpenAPI lê estas opções para descrever os enums no Swagger.
@@ -35,11 +41,17 @@ builder.Services.AddSingleton(TimeProvider.System);
 // Segurança: hash de senha (sem estado, pode ser Singleton).
 builder.Services.AddSingleton<ISenhaHasher, BCryptSenhaHasher>();
 
+// Usuário da requisição atual. TEMPORÁRIO: cabeçalho X-Usuario-Id até a autenticação JWT (Fase 9).
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUsuarioAtual, UsuarioAtualPorCabecalho>();
+
 // Repositórios e serviços (Scoped = uma instância por requisição HTTP).
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IChamadoRepository, ChamadoRepository>();
+builder.Services.AddScoped<IChamadoService, ChamadoService>();
 
 // Seed de dados de desenvolvimento.
 builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOptions.Secao));
@@ -57,6 +69,24 @@ builder.Services.AddOpenApi(options =>
         document.Info.Title = "JP Help Desk API";
         document.Info.Version = "v1";
         document.Info.Description = "API REST para gerenciamento de chamados de suporte técnico.";
+        return Task.CompletedTask;
+    });
+
+    // TEMPORÁRIO (até a Fase 9): exibe o cabeçalho X-Usuario-Id no Swagger para as rotas de chamados.
+    options.AddOperationTransformer((operation, context, _) =>
+    {
+        if (context.Description.RelativePath?.StartsWith("api/chamados") == true)
+        {
+            operation.Parameters ??= [];
+            operation.Parameters.Add(new OpenApiParameter
+            {
+                Name = UsuarioAtualPorCabecalho.Cabecalho,
+                In = ParameterLocation.Header,
+                Required = false,
+                Description = "ID do usuário que está realizando a ação (temporário, até a autenticação JWT).",
+                Schema = new OpenApiSchema { Type = JsonSchemaType.Integer }
+            });
+        }
         return Task.CompletedTask;
     });
 });
