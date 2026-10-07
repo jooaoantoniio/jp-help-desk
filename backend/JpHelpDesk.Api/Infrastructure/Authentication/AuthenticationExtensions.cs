@@ -89,7 +89,9 @@ public static class AuthenticationExtensions
                 PerfilUsuario.Admin.ToApiString(),
                 PerfilUsuario.Tecnico.ToApiString()));
 
-        // Limita tentativas de login por IP (proteção contra força bruta).
+        // Limita tentativas de login por IP (proteção contra força bruta). Configurável para os testes
+        // automatizados, em que todas as requisições vêm do mesmo "IP".
+        var tentativasPorMinuto = configuration.GetValue("Seguranca:TentativasLoginPorMinuto", 10);
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -98,7 +100,7 @@ public static class AuthenticationExtensions
                     httpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido",
                     _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 10,
+                        PermitLimit = tentativasPorMinuto,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0
                     }));
