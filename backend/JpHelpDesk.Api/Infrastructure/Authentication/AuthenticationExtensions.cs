@@ -81,8 +81,13 @@ public static class AuthenticationExtensions
             });
 
         // Protegido por padrão: todo endpoint exige usuário autenticado, exceto os marcados com [AllowAnonymous].
+        // Políticas por perfil para os endpoints restritos.
         services.AddAuthorizationBuilder()
-            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
+            .AddPolicy(Politicas.Admin, policy => policy.RequireRole(PerfilUsuario.Admin.ToApiString()))
+            .AddPolicy(Politicas.Equipe, policy => policy.RequireRole(
+                PerfilUsuario.Admin.ToApiString(),
+                PerfilUsuario.Tecnico.ToApiString()));
 
         // Limita tentativas de login por IP (proteção contra força bruta).
         services.AddRateLimiter(options =>

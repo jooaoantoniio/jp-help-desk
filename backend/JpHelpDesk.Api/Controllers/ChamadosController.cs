@@ -1,6 +1,8 @@
 using JpHelpDesk.Api.DTOs.Chamados;
 using JpHelpDesk.Api.DTOs.Common;
+using JpHelpDesk.Api.Infrastructure.Authentication;
 using JpHelpDesk.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JpHelpDesk.Api.Controllers;
@@ -69,9 +71,11 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
     /// <response code="200">Chamado atualizado.</response>
     /// <response code="400">Dados inválidos, categoria inativa ou chamado finalizado.</response>
+    /// <response code="403">Solicitante tentando editar chamado que não está mais ABERTO.</response>
     /// <response code="404">Chamado não encontrado.</response>
     [HttpPut("{id:int}")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ChamadoResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -94,6 +98,7 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     /// <response code="404">Chamado não encontrado.</response>
     [HttpPatch("{id:int}/status")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ChamadoResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -113,9 +118,12 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
     /// <response code="200">Técnico atribuído.</response>
     /// <response code="400">Técnico inválido ou chamado em status que não permite atribuição.</response>
+    /// <response code="403">Somente ADMIN pode atribuir chamados a outro técnico.</response>
     /// <response code="404">Chamado não encontrado.</response>
     [HttpPatch("{id:int}/atribuir")]
+    [Authorize(Policy = Politicas.Admin)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<ChamadoResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -128,6 +136,27 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     }
 
     /// <summary>
+    /// O técnico/administrador logado assume o chamado como responsável.
+    /// </summary>
+    /// <param name="id">ID do chamado.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
+    /// <response code="200">Chamado assumido.</response>
+    /// <response code="400">Chamado em status que não permite atribuição.</response>
+    /// <response code="403">Somente TECNICO ou ADMIN podem assumir chamados.</response>
+    /// <response code="404">Chamado não encontrado.</response>
+    [HttpPatch("{id:int}/assumir")]
+    [Authorize(Policy = Politicas.Equipe)]
+    [ProducesResponseType<ChamadoResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ChamadoResponse>> Assumir(int id, CancellationToken cancellationToken)
+    {
+        return Ok(await chamadoService.AssumirAsync(id, cancellationToken));
+    }
+
+    /// <summary>
     /// Cancela um chamado (exclusão lógica — o chamado e seu histórico são preservados).
     /// </summary>
     /// <param name="id">ID do chamado.</param>
@@ -137,6 +166,7 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     /// <response code="404">Chamado não encontrado.</response>
     [HttpDelete("{id:int}")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

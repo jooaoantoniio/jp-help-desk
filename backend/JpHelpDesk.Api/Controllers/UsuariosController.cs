@@ -1,16 +1,21 @@
 using JpHelpDesk.Api.DTOs.Common;
 using JpHelpDesk.Api.DTOs.Usuarios;
+using JpHelpDesk.Api.Infrastructure.Authentication;
 using JpHelpDesk.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JpHelpDesk.Api.Controllers;
 
 /// <summary>
-/// Gerenciamento de usuários do sistema.
+/// Gerenciamento de usuários do sistema (somente ADMIN).
 /// </summary>
 [ApiController]
 [Route("api/usuarios")]
 [Produces("application/json")]
+[Authorize(Policy = Politicas.Admin)]
+[ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
 public class UsuariosController(IUsuarioService usuarioService) : ControllerBase
 {
     /// <summary>

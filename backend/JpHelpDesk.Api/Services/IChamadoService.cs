@@ -11,6 +11,7 @@ public interface IChamadoService
     Task<ChamadoResponse> AtualizarAsync(int id, ChamadoRequest request, CancellationToken cancellationToken);
     Task<ChamadoResponse> AlterarStatusAsync(int id, AlterarStatusRequest request, CancellationToken cancellationToken);
     Task<ChamadoResponse> AtribuirTecnicoAsync(int id, AtribuirTecnicoRequest request, CancellationToken cancellationToken);
+    Task<ChamadoResponse> AssumirAsync(int id, CancellationToken cancellationToken);
     Task CancelarAsync(int id, CancellationToken cancellationToken);
     Task<HistoricoResponse> ComentarAsync(int id, ComentarioRequest request, CancellationToken cancellationToken);
     Task<IReadOnlyList<HistoricoResponse>> ListarHistoricoAsync(int id, CancellationToken cancellationToken);

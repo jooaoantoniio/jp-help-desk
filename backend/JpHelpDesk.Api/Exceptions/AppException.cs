@@ -21,6 +21,10 @@ public class ConflitoException(string message)
 public class NaoAutenticadoException(string message)
     : AppException(message, StatusCodes.Status401Unauthorized, "Não autenticado");
 
+/// <summary>Usuário autenticado sem permissão para a operação (HTTP 403).</summary>
+public class AcessoNegadoException(string message)
+    : AppException(message, StatusCodes.Status403Forbidden, "Acesso negado");
+
 /// <summary>Operação que viola uma regra de negócio (HTTP 400).</summary>
 public class RegraNegocioException(string message)
     : AppException(message, StatusCodes.Status400BadRequest, "Regra de negócio violada");

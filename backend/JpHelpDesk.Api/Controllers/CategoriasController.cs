@@ -1,20 +1,23 @@
 using JpHelpDesk.Api.DTOs.Categorias;
 using JpHelpDesk.Api.DTOs.Common;
+using JpHelpDesk.Api.Infrastructure.Authentication;
 using JpHelpDesk.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JpHelpDesk.Api.Controllers;
 
 /// <summary>
-/// Gerenciamento das categorias de chamados.
+/// Categorias de chamados. Leitura para qualquer usuário autenticado; alterações somente ADMIN.
 /// </summary>
 [ApiController]
 [Route("api/categorias")]
 [Produces("application/json")]
+[ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
 public class CategoriasController(ICategoriaService categoriaService) : ControllerBase
 {
     /// <summary>
-    /// Lista as categorias com paginação e filtros.
+    /// Lista as categorias com paginação e filtros. Perfis que não são ADMIN veem apenas as ativas.
     /// </summary>
     /// <response code="200">Página de categorias.</response>
     /// <response code="400">Parâmetros de paginação inválidos.</response>
@@ -50,6 +53,8 @@ public class CategoriasController(ICategoriaService categoriaService) : Controll
     /// <response code="400">Dados inválidos.</response>
     /// <response code="409">Já existe uma categoria com o mesmo nome.</response>
     [HttpPost]
+    [Authorize(Policy = Politicas.Admin)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<CategoriaResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
@@ -72,6 +77,8 @@ public class CategoriasController(ICategoriaService categoriaService) : Controll
     /// <response code="404">Categoria não encontrada.</response>
     /// <response code="409">Já existe outra categoria com o mesmo nome.</response>
     [HttpPut("{id:int}")]
+    [Authorize(Policy = Politicas.Admin)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<CategoriaResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -92,6 +99,8 @@ public class CategoriasController(ICategoriaService categoriaService) : Controll
     /// <response code="204">Categoria desativada.</response>
     /// <response code="404">Categoria não encontrada.</response>
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = Politicas.Admin)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Desativar(int id, CancellationToken cancellationToken)
@@ -108,6 +117,8 @@ public class CategoriasController(ICategoriaService categoriaService) : Controll
     /// <response code="204">Categoria ativada.</response>
     /// <response code="404">Categoria não encontrada.</response>
     [HttpPatch("{id:int}/ativar")]
+    [Authorize(Policy = Politicas.Admin)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Ativar(int id, CancellationToken cancellationToken)

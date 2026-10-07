@@ -11,6 +11,8 @@ namespace JpHelpDesk.Api.Services;
 /// <summary>
 /// Regras de negócio dos chamados. Toda alteração gera um registro de histórico,
 /// salvo na mesma transação (um único SaveChanges) que a própria alteração.
+/// Permissões: ADMIN/TECNICO atuam em qualquer chamado; USUARIO só nos que abriu
+/// (chamados de terceiros respondem 404, para não revelar que existem).
 /// </summary>
 public class ChamadoService(
     IChamadoRepository chamadoRepository,
@@ -21,14 +23,23 @@ public class ChamadoService(
 {
     public async Task<ResultadoPaginado<ChamadoResponse>> ListarAsync(ChamadoQuery query, CancellationToken cancellationToken)
     {
+        var usuario = await usuarioAtual.ObterAsync(cancellationToken);
+
+        // USUARIO só enxerga os próprios chamados, independentemente do filtro enviado.
+        if (!PermissoesChamado.EhEquipe(usuario))
+        {
+            query.SolicitanteId = usuario.Id;
+        }
+
         var resultado = await chamadoRepository.ListarAsync(query, cancellationToken);
-        return resultado.Map(ChamadoResponse.FromEntity);
+        return resultado.Map(chamado => ChamadoResponse.FromEntity(chamado, usuario));
     }
 
     public async Task<ChamadoResponse> ObterPorIdAsync(int id, CancellationToken cancellationToken)
     {
-        var chamado = await ObterEntidadeAsync(id, cancellationToken);
-        return ChamadoResponse.FromEntity(chamado);
+        var usuario = await usuarioAtual.ObterAsync(cancellationToken);
+        var chamado = await ObterVisivelAsync(id, usuario, cancellationToken);
+        return ChamadoResponse.FromEntity(chamado, usuario);
     }
 
     public async Task<ChamadoResponse> AbrirAsync(ChamadoRequest request, CancellationToken cancellationToken)
@@ -56,14 +67,19 @@ public class ChamadoService(
         chamadoRepository.Adicionar(chamado);
         await chamadoRepository.SalvarAlteracoesAsync(cancellationToken);
 
-        return ChamadoResponse.FromEntity(chamado);
+        return ChamadoResponse.FromEntity(chamado, usuario);
     }
 
     public async Task<ChamadoResponse> AtualizarAsync(int id, ChamadoRequest request, CancellationToken cancellationToken)
     {
         var usuario = await usuarioAtual.ObterAsync(cancellationToken);
-        var chamado = await ObterEntidadeAsync(id, cancellationToken);
+        var chamado = await ObterVisivelAsync(id, usuario, cancellationToken);
         GarantirNaoFinalizado(chamado, "editados");
+
+        if (!PermissoesChamado.PodeEditar(chamado, usuario))
+        {
+            throw new AcessoNegadoException("Você só pode editar seus chamados enquanto estiverem com status ABERTO.");
+        }
 
         var titulo = request.Titulo.Trim();
         var descricao = request.Descricao.Trim();
@@ -98,7 +114,7 @@ public class ChamadoService(
 
         if (alteracoes.Count == 0)
         {
-            return ChamadoResponse.FromEntity(chamado); // Nada mudou: sem histórico.
+            return ChamadoResponse.FromEntity(chamado, usuario); // Nada mudou: sem histórico.
         }
 
         var agora = timeProvider.GetUtcNow();
@@ -108,62 +124,50 @@ public class ChamadoService(
 
         await chamadoRepository.SalvarAlteracoesAsync(cancellationToken);
 
-        return ChamadoResponse.FromEntity(chamado);
+        return ChamadoResponse.FromEntity(chamado, usuario);
     }
 
     public async Task<ChamadoResponse> AlterarStatusAsync(int id, AlterarStatusRequest request, CancellationToken cancellationToken)
     {
         var usuario = await usuarioAtual.ObterAsync(cancellationToken);
-        var chamado = await ObterEntidadeAsync(id, cancellationToken);
+        var chamado = await ObterVisivelAsync(id, usuario, cancellationToken);
 
         AplicarStatus(chamado, request.Status!.Value, usuario, request.Observacao);
         await chamadoRepository.SalvarAlteracoesAsync(cancellationToken);
 
-        return ChamadoResponse.FromEntity(chamado);
+        return ChamadoResponse.FromEntity(chamado, usuario);
     }
 
     public async Task<ChamadoResponse> AtribuirTecnicoAsync(int id, AtribuirTecnicoRequest request, CancellationToken cancellationToken)
     {
         var usuario = await usuarioAtual.ObterAsync(cancellationToken);
-        var chamado = await ObterEntidadeAsync(id, cancellationToken);
+        var chamado = await ObterVisivelAsync(id, usuario, cancellationToken);
 
-        if (!FluxoStatusChamado.PermiteAtribuicao(chamado.Status))
+        await AtribuirAsync(chamado, request.TecnicoId!.Value, usuario, cancellationToken);
+
+        return ChamadoResponse.FromEntity(chamado, usuario);
+    }
+
+    public async Task<ChamadoResponse> AssumirAsync(int id, CancellationToken cancellationToken)
+    {
+        var usuario = await usuarioAtual.ObterAsync(cancellationToken);
+
+        // Defesa em profundidade: o controller já restringe à equipe.
+        if (!PermissoesChamado.EhEquipe(usuario))
         {
-            throw new RegraNegocioException(
-                $"Chamados com status {chamado.Status.ToApiString()} não podem ser atribuídos.");
+            throw new AcessoNegadoException("Somente técnicos e administradores podem assumir chamados.");
         }
 
-        if (chamado.TecnicoId == request.TecnicoId)
-        {
-            return ChamadoResponse.FromEntity(chamado); // Já atribuído a este técnico.
-        }
+        var chamado = await ObterVisivelAsync(id, usuario, cancellationToken);
+        await AtribuirAsync(chamado, usuario.Id, usuario, cancellationToken);
 
-        var tecnico = await usuarioRepository.ObterPorIdAsync(request.TecnicoId!.Value, cancellationToken);
-
-        if (tecnico is null || !tecnico.Ativo || tecnico.Perfil == PerfilUsuario.Usuario)
-        {
-            throw new RegraNegocioException(
-                $"Usuário {request.TecnicoId} não encontrado, inativo ou sem perfil TECNICO/ADMIN.");
-        }
-
-        var descricao = chamado.Tecnico is null
-            ? $"Chamado atribuído ao técnico {tecnico.Nome}."
-            : $"Técnico responsável alterado de {chamado.Tecnico.Nome} para {tecnico.Nome}.";
-
-        var agora = timeProvider.GetUtcNow();
-        chamado.Tecnico = tecnico;
-        chamado.DataAtualizacao = agora;
-        RegistrarHistorico(chamado, usuario, TipoHistorico.Atribuicao, descricao, agora);
-
-        await chamadoRepository.SalvarAlteracoesAsync(cancellationToken);
-
-        return ChamadoResponse.FromEntity(chamado);
+        return ChamadoResponse.FromEntity(chamado, usuario);
     }
 
     public async Task CancelarAsync(int id, CancellationToken cancellationToken)
     {
         var usuario = await usuarioAtual.ObterAsync(cancellationToken);
-        var chamado = await ObterEntidadeAsync(id, cancellationToken);
+        var chamado = await ObterVisivelAsync(id, usuario, cancellationToken);
 
         if (chamado.Status == StatusChamado.Cancelado)
         {
@@ -177,7 +181,7 @@ public class ChamadoService(
     public async Task<HistoricoResponse> ComentarAsync(int id, ComentarioRequest request, CancellationToken cancellationToken)
     {
         var usuario = await usuarioAtual.ObterAsync(cancellationToken);
-        var chamado = await ObterEntidadeAsync(id, cancellationToken);
+        var chamado = await ObterVisivelAsync(id, usuario, cancellationToken);
         GarantirNaoFinalizado(chamado, "comentados");
 
         var agora = timeProvider.GetUtcNow();
@@ -196,22 +200,61 @@ public class ChamadoService(
 
     public async Task<IReadOnlyList<HistoricoResponse>> ListarHistoricoAsync(int id, CancellationToken cancellationToken)
     {
-        if (!await chamadoRepository.ExisteAsync(id, cancellationToken))
-        {
-            throw new RecursoNaoEncontradoException($"Chamado {id} não encontrado.");
-        }
+        var usuario = await usuarioAtual.ObterAsync(cancellationToken);
+        await ObterVisivelAsync(id, usuario, cancellationToken);
 
         var historico = await chamadoRepository.ListarHistoricoAsync(id, cancellationToken);
         return historico.Select(HistoricoResponse.FromEntity).ToList();
     }
 
     /// <summary>
-    /// Valida a transição na máquina de estados, atualiza status e datas e registra o histórico.
+    /// Atribui o técnico ao chamado (usado por "atribuir" e por "assumir") e registra o histórico.
+    /// </summary>
+    private async Task AtribuirAsync(Chamado chamado, int tecnicoId, UsuarioLogado usuario, CancellationToken cancellationToken)
+    {
+        if (!FluxoStatusChamado.PermiteAtribuicao(chamado.Status))
+        {
+            throw new RegraNegocioException(
+                $"Chamados com status {chamado.Status.ToApiString()} não podem ser atribuídos.");
+        }
+
+        if (chamado.TecnicoId == tecnicoId)
+        {
+            return; // Já atribuído a este técnico.
+        }
+
+        var tecnico = await usuarioRepository.ObterPorIdAsync(tecnicoId, cancellationToken);
+
+        if (tecnico is null || !tecnico.Ativo || tecnico.Perfil == PerfilUsuario.Usuario)
+        {
+            throw new RegraNegocioException(
+                $"Usuário {tecnicoId} não encontrado, inativo ou sem perfil TECNICO/ADMIN.");
+        }
+
+        var descricao = (chamado.Tecnico, tecnico.Id == usuario.Id) switch
+        {
+            (null, true) => $"Chamado assumido por {tecnico.Nome}.",
+            (null, false) => $"Chamado atribuído ao técnico {tecnico.Nome}.",
+            (_, true) => $"Chamado assumido por {tecnico.Nome} (antes com {chamado.Tecnico.Nome}).",
+            (_, false) => $"Técnico responsável alterado de {chamado.Tecnico.Nome} para {tecnico.Nome}."
+        };
+
+        var agora = timeProvider.GetUtcNow();
+        chamado.Tecnico = tecnico;
+        chamado.DataAtualizacao = agora;
+        RegistrarHistorico(chamado, usuario, TipoHistorico.Atribuicao, descricao, agora);
+
+        await chamadoRepository.SalvarAlteracoesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Valida permissão e transição na máquina de estados, atualiza status e datas e registra o histórico.
     /// </summary>
     private void AplicarStatus(Chamado chamado, StatusChamado novoStatus, UsuarioLogado usuario, string? observacao)
     {
         var statusAnterior = chamado.Status;
 
+        // 1º o fluxo (transição inválida para qualquer perfil → 400); 2º a permissão do usuário (→ 403).
         if (!FluxoStatusChamado.PodeAlterar(statusAnterior, novoStatus))
         {
             var permitidos = FluxoStatusChamado.ProximosStatus(statusAnterior);
@@ -221,6 +264,12 @@ public class ChamadoService(
 
             throw new RegraNegocioException(
                 $"Não é possível alterar o status de {statusAnterior.ToApiString()} para {novoStatus.ToApiString()} ({opcoes}).");
+        }
+
+        if (!PermissoesChamado.PodeAlterarStatus(chamado, usuario, novoStatus))
+        {
+            throw new AcessoNegadoException(
+                "Você pode apenas cancelar seu chamado enquanto ABERTO, ou fechar/reabrir após RESOLVIDO.");
         }
 
         if (novoStatus == StatusChamado.EmAtendimento && chamado.TecnicoId is null)
@@ -266,9 +315,20 @@ public class ChamadoService(
         return historico;
     }
 
-    private async Task<Chamado> ObterEntidadeAsync(int id, CancellationToken cancellationToken) =>
-        await chamadoRepository.ObterPorIdAsync(id, cancellationToken)
-            ?? throw new RecursoNaoEncontradoException($"Chamado {id} não encontrado.");
+    /// <summary>
+    /// Carrega o chamado se o usuário puder vê-lo; caso contrário, responde como inexistente (404).
+    /// </summary>
+    private async Task<Chamado> ObterVisivelAsync(int id, UsuarioLogado usuario, CancellationToken cancellationToken)
+    {
+        var chamado = await chamadoRepository.ObterPorIdAsync(id, cancellationToken);
+
+        if (chamado is null || !PermissoesChamado.PodeVisualizar(chamado, usuario))
+        {
+            throw new RecursoNaoEncontradoException($"Chamado {id} não encontrado.");
+        }
+
+        return chamado;
+    }
 
     private async Task<Categoria> ObterCategoriaAtivaAsync(int categoriaId, CancellationToken cancellationToken)
     {

@@ -1,12 +1,13 @@
 using JpHelpDesk.Api.DTOs.Common;
 using JpHelpDesk.Api.Models;
 using JpHelpDesk.Api.Models.Enums;
+using JpHelpDesk.Api.Services.Security;
 
 namespace JpHelpDesk.Api.DTOs.Chamados;
 
 /// <summary>
 /// Chamado retornado pela API. "proximosStatus" lista os status para os quais
-/// o chamado pode ser alterado a partir do status atual.
+/// o usuário atual pode alterar o chamado a partir do status atual.
 /// </summary>
 public record ChamadoResponse(
     int Id,
@@ -25,7 +26,7 @@ public record ChamadoResponse(
     /// <summary>
     /// Requer as navegações Categoria, Solicitante e Tecnico carregadas.
     /// </summary>
-    public static ChamadoResponse FromEntity(Chamado chamado) => new(
+    public static ChamadoResponse FromEntity(Chamado chamado, UsuarioLogado usuario) => new(
         chamado.Id,
         chamado.Titulo,
         chamado.Descricao,
@@ -37,5 +38,5 @@ public record ChamadoResponse(
         chamado.DataAbertura,
         chamado.DataAtualizacao,
         chamado.DataFechamento,
-        FluxoStatusChamado.ProximosStatus(chamado.Status));
+        PermissoesChamado.ProximosStatus(chamado, usuario));
 }

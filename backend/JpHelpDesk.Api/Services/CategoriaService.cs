@@ -2,14 +2,26 @@ using JpHelpDesk.Api.DTOs.Categorias;
 using JpHelpDesk.Api.DTOs.Common;
 using JpHelpDesk.Api.Exceptions;
 using JpHelpDesk.Api.Models;
+using JpHelpDesk.Api.Models.Enums;
 using JpHelpDesk.Api.Repositories;
+using JpHelpDesk.Api.Services.Security;
 
 namespace JpHelpDesk.Api.Services;
 
-public class CategoriaService(ICategoriaRepository repository, TimeProvider timeProvider) : ICategoriaService
+public class CategoriaService(
+    ICategoriaRepository repository,
+    IUsuarioAtual usuarioAtual,
+    TimeProvider timeProvider) : ICategoriaService
 {
     public async Task<ResultadoPaginado<CategoriaResponse>> ListarAsync(CategoriaQuery query, CancellationToken cancellationToken)
     {
+        // Somente o ADMIN gerencia categorias inativas; os demais perfis veem só as ativas.
+        var usuario = await usuarioAtual.ObterAsync(cancellationToken);
+        if (usuario.Perfil != PerfilUsuario.Admin)
+        {
+            query.Ativo = true;
+        }
+
         var resultado = await repository.ListarAsync(query, cancellationToken);
         return resultado.Map(CategoriaResponse.FromEntity);
     }
