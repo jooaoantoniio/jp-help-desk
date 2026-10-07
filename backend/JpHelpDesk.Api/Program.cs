@@ -53,6 +53,7 @@ builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IChamadoRepository, ChamadoRepository>();
 builder.Services.AddScoped<IChamadoService, ChamadoService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // Seed de dados de desenvolvimento.
 builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOptions.Secao));

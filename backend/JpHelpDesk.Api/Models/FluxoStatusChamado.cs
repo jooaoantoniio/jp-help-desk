@@ -17,6 +17,10 @@ public static class FluxoStatusChamado
         [StatusChamado.Cancelado] = []
     };
 
+    /// <summary>Status de chamados que ainda aguardam solução (não resolvidos, fechados nem cancelados).</summary>
+    public static readonly StatusChamado[] StatusEmAberto =
+        [StatusChamado.Aberto, StatusChamado.EmAtendimento, StatusChamado.AguardandoUsuario];
+
     public static IReadOnlyList<StatusChamado> ProximosStatus(StatusChamado atual) => Transicoes[atual];
 
     public static bool PodeAlterar(StatusChamado de, StatusChamado para) => Transicoes[de].Contains(para);

@@ -73,7 +73,44 @@ public class ChamadoRepository(AppDbContext context) : IChamadoRepository
             .ThenBy(h => h.Id)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyDictionary<StatusChamado, int>> ContarPorStatusAsync(int? solicitanteId, CancellationToken cancellationToken) =>
+        await DoSolicitante(solicitanteId)
+            .GroupBy(c => c.Status)
+            .Select(g => new { Status = g.Key, Quantidade = g.Count() })
+            .ToDictionaryAsync(x => x.Status, x => x.Quantidade, cancellationToken);
+
+    public async Task<IReadOnlyDictionary<PrioridadeChamado, int>> ContarPorPrioridadeAsync(int? solicitanteId, CancellationToken cancellationToken) =>
+        await DoSolicitante(solicitanteId)
+            .GroupBy(c => c.Prioridade)
+            .Select(g => new { Prioridade = g.Key, Quantidade = g.Count() })
+            .ToDictionaryAsync(x => x.Prioridade, x => x.Quantidade, cancellationToken);
+
+    public async Task<IReadOnlyList<(int CategoriaId, string Categoria, int Quantidade)>> ContarPorCategoriaAsync(
+        int? solicitanteId,
+        CancellationToken cancellationToken)
+    {
+        var contagens = await DoSolicitante(solicitanteId)
+            .GroupBy(c => new { c.CategoriaId, c.Categoria.Nome })
+            .Select(g => new { g.Key.CategoriaId, g.Key.Nome, Quantidade = g.Count() })
+            .OrderByDescending(x => x.Quantidade)
+            .ThenBy(x => x.Nome)
+            .ToListAsync(cancellationToken);
+
+        return contagens.Select(x => (x.CategoriaId, x.Nome, x.Quantidade)).ToList();
+    }
+
+    public Task<int> ContarCriticosEmAbertoAsync(int? solicitanteId, CancellationToken cancellationToken) =>
+        DoSolicitante(solicitanteId)
+            .CountAsync(c => c.Prioridade == PrioridadeChamado.Critica
+                && FluxoStatusChamado.StatusEmAberto.Contains(c.Status), cancellationToken);
+
     public void Adicionar(Chamado chamado) => context.Chamados.Add(chamado);
+
+    /// <summary>Chamados de um solicitante, ou todos quando solicitanteId é null.</summary>
+    private IQueryable<Chamado> DoSolicitante(int? solicitanteId) =>
+        solicitanteId is null
+            ? context.Chamados.AsNoTracking()
+            : context.Chamados.AsNoTracking().Where(c => c.SolicitanteId == solicitanteId);
 
     public Task SalvarAlteracoesAsync(CancellationToken cancellationToken) =>
         context.SaveChangesAsync(cancellationToken);
