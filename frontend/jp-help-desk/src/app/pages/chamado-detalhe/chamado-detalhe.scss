@@ -1,0 +1,216 @@
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  color: var(--jp-text-muted);
+  font-size: 14px;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--jp-primary);
+  }
+}
+
+.cabecalho__badges {
+  display: flex;
+  gap: 8px;
+}
+
+.progresso {
+  margin-bottom: 12px;
+}
+
+.detalhe {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 16px;
+
+  @media (max-width: 959.98px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.detalhe__principal,
+.detalhe__lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+// No mobile as ações aparecem antes da descrição.
+.detalhe__lateral {
+  @media (max-width: 959.98px) {
+    order: -1;
+  }
+}
+
+.secao {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.descricao {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+// ---------- Ações ----------
+.acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  button,
+  span {
+    width: 100%;
+  }
+}
+
+.acoes__botao--destrutiva:not(:disabled) {
+  color: var(--jp-status-cancelado-fg);
+}
+
+.acoes__dica {
+  margin: 0;
+  color: var(--jp-text-muted);
+  font-size: 12px;
+}
+
+// ---------- Dados ----------
+.dados {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  margin: 0;
+
+  dt {
+    color: var(--jp-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 500;
+  }
+}
+
+.dados__vazio {
+  color: var(--jp-text-muted);
+  font-weight: 400 !important;
+}
+
+// ---------- Comentário ----------
+.comentar {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  @media (max-width: 599.98px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.comentar__campo {
+  flex: 1;
+}
+
+// ---------- Linha do tempo ----------
+.linha-tempo {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evento {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding-bottom: 16px;
+
+  // Linha vertical ligando os eventos.
+  &:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    top: 32px;
+    bottom: 0;
+    left: 15px;
+    width: 2px;
+    background: var(--jp-border);
+  }
+}
+
+.evento__icone {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--jp-content-bg);
+  color: var(--jp-primary);
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}
+
+.evento__corpo {
+  min-width: 0;
+}
+
+.evento__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 4px 0 2px;
+  color: var(--jp-text-muted);
+  font-size: 12px;
+
+  strong {
+    color: var(--jp-text);
+  }
+}
+
+.evento__texto {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.evento--comentario .evento__texto {
+  padding: 10px 12px;
+  border-radius: 0 10px 10px;
+  background: var(--jp-content-bg);
+}
+
+// ---------- Erro ----------
+.estado {
+  max-width: 520px;
+  margin: 32px auto;
+  text-align: center;
+
+  h1 {
+    margin: 8px 0 4px;
+    font-size: 18px;
+  }
+
+  p {
+    margin: 0 0 16px;
+    color: var(--jp-text-muted);
+  }
+}
+
+.estado__icone {
+  width: 48px;
+  height: 48px;
+  font-size: 48px;
+  color: var(--jp-text-muted);
+}

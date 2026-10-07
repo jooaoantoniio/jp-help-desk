@@ -1,8 +1,142 @@
-<div class="page-header">
-  <div>
-    <h1>Detalhe do chamado</h1>
-    <p>Informa&ccedil;&otilde;es, a&ccedil;&otilde;es e hist&oacute;rico.</p>
+@if (chamado.error()) {
+  <div class="card estado" role="alert">
+    <mat-icon class="estado__icone" aria-hidden="true">{{ naoEncontrado() ? 'search_off' : 'cloud_off' }}</mat-icon>
+    <h1>{{ naoEncontrado() ? 'Chamado não encontrado' : 'Não foi possível carregar o chamado' }}</h1>
+    <p>{{ naoEncontrado() ? 'Ele não existe ou você não tem acesso a ele.' : erroCarregamento() }}</p>
+    <a mat-flat-button routerLink="/chamados">Voltar para a lista</a>
   </div>
-</div>
+} @else if (chamado.value(); as c) {
+  <a class="voltar" routerLink="/chamados">
+    <mat-icon aria-hidden="true">arrow_back</mat-icon>
+    Chamados
+  </a>
 
-<div class="card">Tela em constru&ccedil;&atilde;o &mdash; ser&aacute; implementada na Fase 14.</div>
+  <div class="page-header">
+    <div>
+      <h1>#{{ c.id }} · {{ c.titulo }}</h1>
+      <p class="cabecalho__badges">
+        <app-status-badge [status]="c.status" />
+        <app-prioridade-badge [prioridade]="c.prioridade" />
+      </p>
+    </div>
+    @if (podeEditar()) {
+      <a mat-stroked-button [routerLink]="['/chamados', c.id, 'editar']">
+        <mat-icon>edit</mat-icon>
+        Editar
+      </a>
+    }
+  </div>
+
+  @if (processando()) {
+    <mat-progress-bar mode="indeterminate" class="progresso" />
+  }
+
+  <div class="detalhe">
+    <!-- ---------- Coluna principal ---------- -->
+    <div class="detalhe__principal">
+      <section class="card">
+        <h2 class="secao">Descrição</h2>
+        <p class="descricao">{{ c.descricao }}</p>
+      </section>
+
+      <section class="card">
+        <h2 class="secao">Histórico</h2>
+
+        @if (podeComentar()) {
+          <form class="comentar" [formGroup]="formComentario" #formDiretiva="ngForm" (ngSubmit)="comentar(formDiretiva)">
+            <mat-form-field appearance="outline" class="comentar__campo">
+              <mat-label>Adicionar comentário</mat-label>
+              <textarea matInput formControlName="texto" rows="2" maxlength="1000"
+                placeholder="Informação adicional, andamento, solução..."></textarea>
+              @if (comentario.hasError('minlength') || comentario.hasError('required')) {
+                <mat-error>Escreva o comentário (mínimo de 2 caracteres).</mat-error>
+              }
+            </mat-form-field>
+            <button mat-flat-button type="submit" [disabled]="processando()">Comentar</button>
+          </form>
+        }
+
+        <ol class="linha-tempo">
+          @for (evento of historico.value() ?? []; track evento.id) {
+            <li class="evento" [class.evento--comentario]="evento.tipo === 'COMENTARIO'">
+              <span class="evento__icone" aria-hidden="true"><mat-icon>{{ iconesHistorico[evento.tipo] }}</mat-icon></span>
+              <div class="evento__corpo">
+                <p class="evento__meta">
+                  <strong>{{ evento.usuario.nome }}</strong>
+                  <span>{{ rotulosHistorico[evento.tipo] }}</span>
+                  <time [attr.datetime]="evento.dataRegistro">{{ evento.dataRegistro | date: 'dd/MM/yyyy HH:mm' }}</time>
+                </p>
+                <p class="evento__texto">{{ evento.descricao }}</p>
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+    </div>
+
+    <!-- ---------- Lateral: ações e dados ---------- -->
+    <aside class="detalhe__lateral">
+      @if (acoes().length || podeAssumir() || podeAtribuir()) {
+        <section class="card acoes" aria-label="Ações do chamado">
+          <h2 class="secao">Ações</h2>
+          @if (podeAssumir()) {
+            <button mat-flat-button type="button" (click)="assumir()" [disabled]="processando()">
+              <mat-icon>front_hand</mat-icon>
+              Assumir chamado
+            </button>
+          }
+          @if (podeAtribuir()) {
+            <button mat-stroked-button type="button" (click)="atribuir()" [disabled]="processando()">
+              <mat-icon>person_add</mat-icon>
+              {{ c.tecnico ? 'Trocar técnico' : 'Atribuir técnico' }}
+            </button>
+          }
+          @for (acao of acoes(); track acao.status) {
+            <span [matTooltip]="acao.bloqueio ?? ''" [matTooltipDisabled]="!acao.bloqueio">
+              <button
+                mat-stroked-button
+                type="button"
+                class="acoes__botao"
+                [class.acoes__botao--destrutiva]="acao.destrutiva"
+                [disabled]="processando() || !!acao.bloqueio"
+                (click)="alterarStatus(acao)"
+              >
+                <mat-icon>{{ acao.icone }}</mat-icon>
+                {{ acao.rotulo }}
+              </button>
+            </span>
+          }
+          @for (acao of acoes(); track acao.status) {
+            @if (acao.bloqueio) {
+              <p class="acoes__dica">{{ acao.bloqueio }}</p>
+            }
+          }
+        </section>
+      }
+
+      <section class="card">
+        <h2 class="secao">Detalhes</h2>
+        <dl class="dados">
+          <dt>Categoria</dt>
+          <dd>{{ c.categoria.nome }}</dd>
+          <dt>Solicitante</dt>
+          <dd>{{ c.solicitante.nome }}</dd>
+          <dt>Técnico</dt>
+          <dd [class.dados__vazio]="!c.tecnico">{{ c.tecnico?.nome ?? 'Ainda não atribuído' }}</dd>
+          <dt>Aberto em</dt>
+          <dd>{{ c.dataAbertura | date: 'dd/MM/yyyy HH:mm' }}</dd>
+          @if (c.dataAtualizacao) {
+            <dt>Atualizado em</dt>
+            <dd>{{ c.dataAtualizacao | date: 'dd/MM/yyyy HH:mm' }}</dd>
+          }
+          @if (c.dataFechamento) {
+            <dt>Encerrado em</dt>
+            <dd>{{ c.dataFechamento | date: 'dd/MM/yyyy HH:mm' }}</dd>
+          }
+        </dl>
+      </section>
+    </aside>
+  </div>
+} @else {
+  <mat-progress-bar mode="indeterminate" aria-label="Carregando chamado" />
+}
