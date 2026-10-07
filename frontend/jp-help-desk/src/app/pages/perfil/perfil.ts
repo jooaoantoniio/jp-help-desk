@@ -13,7 +13,7 @@ import { PerfilBadge } from '../../components/badges/perfil-badge';
 import { ForcaSenha } from '../../components/forca-senha/forca-senha';
 import { iniciais } from '../../models/usuario';
 import { AuthService } from '../../services/auth.service';
-import { mensagemErro } from '../../services/erro-api';
+import { aplicarErrosDaApi, mensagemErro } from '../../services/erro-api';
 import { confirmaCampo, LIMITES_SENHA, senhaForte } from '../../validacao/senha';
 
 /** Dados do usuário logado e troca da própria senha (todos os perfis). */
@@ -73,7 +73,10 @@ export class Perfil {
           this.mostrarSenhas.set(false);
           this.snackBar.open('Senha alterada com sucesso.', 'OK', { duration: 4000 });
         },
-        error: (erro: unknown) => this.erro.set(mensagemErro(erro)),
+        error: (erro: unknown) => {
+          aplicarErrosDaApi(this.form, erro);
+          this.erro.set(mensagemErro(erro));
+        },
       });
   }
 }

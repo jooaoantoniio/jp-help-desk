@@ -41,6 +41,8 @@
         <mat-error>Informe o título.</mat-error>
       } @else if (form.controls.titulo.hasError('minlength')) {
         <mat-error>O título deve ter pelo menos {{ limites.tituloMin }} caracteres.</mat-error>
+      } @else if (form.controls.titulo.hasError('api')) {
+        <mat-error>{{ form.controls.titulo.getError('api') }}</mat-error>
       }
     </mat-form-field>
 
@@ -54,6 +56,8 @@
         </mat-select>
         @if (form.controls.categoriaId.hasError('required')) {
           <mat-error>Selecione a categoria.</mat-error>
+        } @else if (form.controls.categoriaId.hasError('api')) {
+          <mat-error>{{ form.controls.categoriaId.getError('api') }}</mat-error>
         }
       </mat-form-field>
 
@@ -82,6 +86,8 @@
         <mat-error>Descreva o problema.</mat-error>
       } @else if (form.controls.descricao.hasError('minlength')) {
         <mat-error>A descrição deve ter pelo menos {{ limites.descricaoMin }} caracteres.</mat-error>
+      } @else if (form.controls.descricao.hasError('api')) {
+        <mat-error>{{ form.controls.descricao.getError('api') }}</mat-error>
       }
     </mat-form-field>
 

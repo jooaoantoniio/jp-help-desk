@@ -15,7 +15,7 @@ import { PRIORIDADE_LABEL, PrioridadeChamado } from '../../models/enums';
 import { AuthService } from '../../services/auth.service';
 import { CategoriaService } from '../../services/categoria.service';
 import { ChamadoService } from '../../services/chamado.service';
-import { mensagemErro } from '../../services/erro-api';
+import { aplicarErrosDaApi, mensagemErro } from '../../services/erro-api';
 
 /** Limites iguais aos da API (ChamadoRequest no backend). */
 export const LIMITES = { tituloMin: 5, tituloMax: 150, descricaoMin: 10, descricaoMax: 4000 } as const;
@@ -131,7 +131,10 @@ export class ChamadoForm {
         this.snackBar.open(`Chamado #${chamado.id} ${acao} com sucesso.`, 'OK', { duration: 4000 });
         void this.router.navigate(['/chamados', chamado.id]);
       },
-      error: (erro: unknown) => this.erro.set(mensagemErro(erro)),
+      error: (erro: unknown) => {
+        aplicarErrosDaApi(this.form, erro);
+        this.erro.set(mensagemErro(erro));
+      },
     });
   }
 

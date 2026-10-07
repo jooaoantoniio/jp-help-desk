@@ -12,7 +12,7 @@ import { Observable, finalize } from 'rxjs';
 import { ForcaSenha } from '../../components/forca-senha/forca-senha';
 import { PERFIL_LABEL, PerfilUsuario } from '../../models/enums';
 import { Usuario } from '../../models/usuario';
-import { mensagemErro } from '../../services/erro-api';
+import { aplicarErrosDaApi, mensagemErro } from '../../services/erro-api';
 import { UsuarioService } from '../../services/usuario.service';
 import { LIMITES_SENHA, senhaForte } from '../../validacao/senha';
 
@@ -57,6 +57,8 @@ export interface UsuarioDialogDados {
             <mat-error>Informe o nome.</mat-error>
           } @else if (form.controls.nome.hasError('minlength')) {
             <mat-error>O nome deve ter pelo menos {{ limites.nomeMin }} caracteres.</mat-error>
+          } @else if (form.controls.nome.hasError('api')) {
+            <mat-error>{{ form.controls.nome.getError('api') }}</mat-error>
           }
         </mat-form-field>
 
@@ -69,6 +71,8 @@ export interface UsuarioDialogDados {
             <mat-error>Informe um e-mail válido.</mat-error>
           } @else if (form.controls.email.hasError('emUso')) {
             <mat-error>Este e-mail já está em uso por outro usuário.</mat-error>
+          } @else if (form.controls.email.hasError('api')) {
+            <mat-error>{{ form.controls.email.getError('api') }}</mat-error>
           }
         </mat-form-field>
 
@@ -99,6 +103,8 @@ export interface UsuarioDialogDados {
               <mat-error>Informe a senha inicial.</mat-error>
             } @else if (form.controls.senha.hasError('senhaFraca')) {
               <mat-error>A senha não atende a todos os requisitos.</mat-error>
+            } @else if (form.controls.senha.hasError('api')) {
+              <mat-error>{{ form.controls.senha.getError('api') }}</mat-error>
             }
           </mat-form-field>
           <app-forca-senha [senha]="form.controls.senha.value" />
@@ -184,6 +190,7 @@ export class UsuarioDialog {
             email.setErrors({ emUso: true });
             email.markAsTouched();
           } else {
+            aplicarErrosDaApi(this.form, erro);
             this.erro.set(mensagemErro(erro));
           }
         },

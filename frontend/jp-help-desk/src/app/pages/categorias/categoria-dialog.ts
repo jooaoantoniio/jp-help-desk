@@ -10,7 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { finalize } from 'rxjs';
 import { Categoria } from '../../models/categoria';
 import { CategoriaService } from '../../services/categoria.service';
-import { mensagemErro } from '../../services/erro-api';
+import { aplicarErrosDaApi, mensagemErro } from '../../services/erro-api';
 
 /** Mesmos limites do CategoriaRequest da API. */
 const LIMITES = { nomeMin: 2, nomeMax: 50, descricaoMax: 250 } as const;
@@ -50,6 +50,8 @@ const LIMITES = { nomeMin: 2, nomeMax: 50, descricaoMax: 250 } as const;
             <mat-error>O nome deve ter pelo menos {{ limites.nomeMin }} caracteres.</mat-error>
           } @else if (form.controls.nome.hasError('emUso')) {
             <mat-error>Já existe uma categoria com esse nome.</mat-error>
+          } @else if (form.controls.nome.hasError('api')) {
+            <mat-error>{{ form.controls.nome.getError('api') }}</mat-error>
           }
         </mat-form-field>
 
@@ -122,6 +124,7 @@ export class CategoriaDialog {
             this.form.controls.nome.setErrors({ emUso: true });
             this.form.controls.nome.markAsTouched();
           } else {
+            aplicarErrosDaApi(this.form, erro);
             this.erro.set(mensagemErro(erro));
           }
         },
