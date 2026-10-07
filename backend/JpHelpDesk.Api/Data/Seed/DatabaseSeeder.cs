@@ -7,8 +7,8 @@ using Microsoft.Extensions.Options;
 namespace JpHelpDesk.Api.Data.Seed;
 
 /// <summary>
-/// Cria os usuários de teste no ambiente de desenvolvimento. É idempotente:
-/// usuários que já existem (pelo e-mail) não são alterados.
+/// Dados do ambiente de desenvolvimento: usuários de teste e, opcionalmente, chamados de demonstração.
+/// É idempotente: o que já existe não é alterado.
 /// </summary>
 public class DatabaseSeeder(
     AppDbContext context,
@@ -24,19 +24,40 @@ public class DatabaseSeeder(
         ("Usuário Padrão", "usuario@jphelpdesk.com", PerfilUsuario.Usuario)
     ];
 
+    // Solicitantes extras, criados apenas junto com os chamados de demonstração.
+    private static readonly (string Nome, string Email, PerfilUsuario Perfil)[] UsuariosDemonstracao =
+    [
+        ("Maria Oliveira", "maria.oliveira@jphelpdesk.com", PerfilUsuario.Usuario),
+        ("Carlos Lima", "carlos.lima@jphelpdesk.com", PerfilUsuario.Usuario)
+    ];
+
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        var senha = options.Value.SenhaUsuariosTeste;
+        var config = options.Value;
 
-        if (string.IsNullOrWhiteSpace(senha))
+        if (string.IsNullOrWhiteSpace(config.SenhaUsuariosTeste))
         {
             logger.LogWarning(
-                "Seed de usuários ignorado: configure '{Chave}' via User Secrets ou variável de ambiente.",
+                "Seed ignorado: configure '{Chave}' via User Secrets ou variável de ambiente.",
                 $"{SeedOptions.Secao}:{nameof(SeedOptions.SenhaUsuariosTeste)}");
             return;
         }
 
-        foreach (var (nome, email, perfil) in UsuariosTeste)
+        var usuarios = config.ChamadosDemonstracao ? [.. UsuariosTeste, .. UsuariosDemonstracao] : UsuariosTeste;
+        await CriarUsuariosAsync(usuarios, config.SenhaUsuariosTeste, cancellationToken);
+
+        if (config.ChamadosDemonstracao)
+        {
+            await new ChamadosDemonstracaoSeeder(context, timeProvider, logger).SeedAsync(cancellationToken);
+        }
+    }
+
+    private async Task CriarUsuariosAsync(
+        IEnumerable<(string Nome, string Email, PerfilUsuario Perfil)> usuarios,
+        string senha,
+        CancellationToken cancellationToken)
+    {
+        foreach (var (nome, email, perfil) in usuarios)
         {
             if (await context.Usuarios.AnyAsync(u => u.Email == email, cancellationToken))
             {
