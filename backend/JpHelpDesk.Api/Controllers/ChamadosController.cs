@@ -14,10 +14,10 @@ namespace JpHelpDesk.Api.Controllers;
 public class ChamadosController(IChamadoService chamadoService) : ControllerBase
 {
     /// <summary>
-    /// Lista chamados com filtros, ordenaÃ§Ã£o e paginaÃ§Ã£o.
+    /// Lista chamados com filtros, ordenação e paginação.
     /// </summary>
-    /// <response code="200">PÃ¡gina de chamados.</response>
-    /// <response code="400">Filtros invÃ¡lidos.</response>
+    /// <response code="200">Página de chamados.</response>
+    /// <response code="400">Filtros inválidos.</response>
     [HttpGet]
     [ProducesResponseType<ResultadoPaginado<ChamadoResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -29,12 +29,12 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     }
 
     /// <summary>
-    /// ObtÃ©m um chamado pelo ID.
+    /// Obtém um chamado pelo ID.
     /// </summary>
     /// <param name="id">ID do chamado.</param>
-    /// <param name="cancellationToken">Token de cancelamento da requisiÃ§Ã£o.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
     /// <response code="200">Chamado encontrado.</response>
-    /// <response code="404">Chamado nÃ£o encontrado.</response>
+    /// <response code="404">Chamado não encontrado.</response>
     [HttpGet("{id:int}")]
     [ProducesResponseType<ChamadoResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -44,11 +44,11 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     }
 
     /// <summary>
-    /// Abre um novo chamado em nome do usuÃ¡rio atual.
+    /// Abre um novo chamado em nome do usuário atual.
     /// </summary>
     /// <response code="201">Chamado aberto com status ABERTO.</response>
-    /// <response code="400">Dados invÃ¡lidos ou categoria inativa.</response>
-    /// <response code="401">UsuÃ¡rio nÃ£o identificado.</response>
+    /// <response code="400">Dados inválidos ou categoria inativa.</response>
+    /// <response code="401">Usuário não identificado.</response>
     [HttpPost]
     [ProducesResponseType<ChamadoResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -62,14 +62,14 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     }
 
     /// <summary>
-    /// Edita tÃ­tulo, descriÃ§Ã£o, prioridade e categoria de um chamado nÃ£o finalizado.
+    /// Edita título, descrição, prioridade e categoria de um chamado não finalizado.
     /// </summary>
     /// <param name="id">ID do chamado.</param>
     /// <param name="request">Novos dados do chamado.</param>
-    /// <param name="cancellationToken">Token de cancelamento da requisiÃ§Ã£o.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
     /// <response code="200">Chamado atualizado.</response>
-    /// <response code="400">Dados invÃ¡lidos, categoria inativa ou chamado finalizado.</response>
-    /// <response code="404">Chamado nÃ£o encontrado.</response>
+    /// <response code="400">Dados inválidos, categoria inativa ou chamado finalizado.</response>
+    /// <response code="404">Chamado não encontrado.</response>
     [HttpPut("{id:int}")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ChamadoResponse>(StatusCodes.Status200OK)]
@@ -88,10 +88,10 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     /// </summary>
     /// <param name="id">ID do chamado.</param>
     /// <param name="request">Novo status.</param>
-    /// <param name="cancellationToken">Token de cancelamento da requisiÃ§Ã£o.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
     /// <response code="200">Status alterado.</response>
-    /// <response code="400">TransiÃ§Ã£o de status nÃ£o permitida.</response>
-    /// <response code="404">Chamado nÃ£o encontrado.</response>
+    /// <response code="400">Transição de status não permitida.</response>
+    /// <response code="404">Chamado não encontrado.</response>
     [HttpPatch("{id:int}/status")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ChamadoResponse>(StatusCodes.Status200OK)]
@@ -106,14 +106,14 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     }
 
     /// <summary>
-    /// Atribui (ou troca) o tÃ©cnico responsÃ¡vel pelo chamado.
+    /// Atribui (ou troca) o técnico responsável pelo chamado.
     /// </summary>
     /// <param name="id">ID do chamado.</param>
-    /// <param name="request">TÃ©cnico responsÃ¡vel.</param>
-    /// <param name="cancellationToken">Token de cancelamento da requisiÃ§Ã£o.</param>
-    /// <response code="200">TÃ©cnico atribuÃ­do.</response>
-    /// <response code="400">TÃ©cnico invÃ¡lido ou chamado em status que nÃ£o permite atribuiÃ§Ã£o.</response>
-    /// <response code="404">Chamado nÃ£o encontrado.</response>
+    /// <param name="request">Técnico responsável.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
+    /// <response code="200">Técnico atribuído.</response>
+    /// <response code="400">Técnico inválido ou chamado em status que não permite atribuição.</response>
+    /// <response code="404">Chamado não encontrado.</response>
     [HttpPatch("{id:int}/atribuir")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ChamadoResponse>(StatusCodes.Status200OK)]
@@ -128,13 +128,13 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     }
 
     /// <summary>
-    /// Cancela um chamado (exclusÃ£o lÃ³gica â€” o chamado e seu histÃ³rico sÃ£o preservados).
+    /// Cancela um chamado (exclusão lógica — o chamado e seu histórico são preservados).
     /// </summary>
     /// <param name="id">ID do chamado.</param>
-    /// <param name="cancellationToken">Token de cancelamento da requisiÃ§Ã£o.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
     /// <response code="204">Chamado cancelado.</response>
-    /// <response code="400">Chamado jÃ¡ resolvido ou fechado.</response>
-    /// <response code="404">Chamado nÃ£o encontrado.</response>
+    /// <response code="400">Chamado já resolvido ou fechado.</response>
+    /// <response code="404">Chamado não encontrado.</response>
     [HttpDelete("{id:int}")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -147,12 +147,12 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     }
 
     /// <summary>
-    /// Retorna a linha do tempo do chamado (abertura, atribuiÃ§Ãµes, status, ediÃ§Ãµes e comentÃ¡rios).
+    /// Retorna a linha do tempo do chamado (abertura, atribuições, status, edições e comentários).
     /// </summary>
     /// <param name="id">ID do chamado.</param>
-    /// <param name="cancellationToken">Token de cancelamento da requisiÃ§Ã£o.</param>
-    /// <response code="200">Eventos em ordem cronolÃ³gica.</response>
-    /// <response code="404">Chamado nÃ£o encontrado.</response>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
+    /// <response code="200">Eventos em ordem cronológica.</response>
+    /// <response code="404">Chamado não encontrado.</response>
     [HttpGet("{id:int}/historico")]
     [ProducesResponseType<IReadOnlyList<HistoricoResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -164,15 +164,15 @@ public class ChamadosController(IChamadoService chamadoService) : ControllerBase
     }
 
     /// <summary>
-    /// Adiciona um comentÃ¡rio ao chamado (observaÃ§Ã£o do tÃ©cnico ou informaÃ§Ã£o do solicitante).
+    /// Adiciona um comentário ao chamado (observação do técnico ou informação do solicitante).
     /// </summary>
     /// <param name="id">ID do chamado.</param>
-    /// <param name="request">Texto do comentÃ¡rio.</param>
-    /// <param name="cancellationToken">Token de cancelamento da requisiÃ§Ã£o.</param>
-    /// <response code="201">ComentÃ¡rio registrado no histÃ³rico.</response>
-    /// <response code="400">Texto invÃ¡lido ou chamado finalizado.</response>
-    /// <response code="401">UsuÃ¡rio nÃ£o identificado.</response>
-    /// <response code="404">Chamado nÃ£o encontrado.</response>
+    /// <param name="request">Texto do comentário.</param>
+    /// <param name="cancellationToken">Token de cancelamento da requisição.</param>
+    /// <response code="201">Comentário registrado no histórico.</response>
+    /// <response code="400">Texto inválido ou chamado finalizado.</response>
+    /// <response code="401">Usuário não identificado.</response>
+    /// <response code="404">Chamado não encontrado.</response>
     [HttpPost("{id:int}/comentarios")]
     [ProducesResponseType<HistoricoResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
