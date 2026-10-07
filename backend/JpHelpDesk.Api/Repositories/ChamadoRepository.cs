@@ -64,6 +64,18 @@ public class ChamadoRepository(AppDbContext context) : IChamadoRepository
     public Task<Chamado?> ObterPorIdAsync(int id, CancellationToken cancellationToken) =>
         ComReferencias(context.Chamados).FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
+    public Task<bool> ExisteAsync(int id, CancellationToken cancellationToken) =>
+        context.Chamados.AnyAsync(c => c.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<HistoricoChamado>> ListarHistoricoAsync(int chamadoId, CancellationToken cancellationToken) =>
+        await context.HistoricosChamado
+            .AsNoTracking()
+            .Include(h => h.Usuario)
+            .Where(h => h.ChamadoId == chamadoId)
+            .OrderBy(h => h.DataRegistro)
+            .ThenBy(h => h.Id)
+            .ToListAsync(cancellationToken);
+
     public void Adicionar(Chamado chamado) => context.Chamados.Add(chamado);
 
     public Task SalvarAlteracoesAsync(CancellationToken cancellationToken) =>
