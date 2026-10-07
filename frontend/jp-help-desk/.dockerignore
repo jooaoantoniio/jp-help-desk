@@ -1,0 +1,8 @@
+# Fica fora do contexto de build: dependências e saídas locais (são recriadas dentro da imagem).
+node_modules/
+dist/
+.angular/
+coverage/
+.vscode/
+Dockerfile
+.dockerignore

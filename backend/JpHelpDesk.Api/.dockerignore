@@ -1,0 +1,11 @@
+# Fica fora do contexto de build: artefatos locais e arquivos que não pertencem à imagem.
+bin/
+obj/
+*.user
+.vs/
+.vscode/
+Dockerfile
+.dockerignore
+# appsettings.Development.json aponta para o SQL Server local (.\SQLEXPRESS); no contêiner a
+# conexão vem de variável de ambiente.
+appsettings.Development.json

@@ -1,0 +1,57 @@
+# JP Help Desk completo em contêineres: SQL Server + API + frontend (nginx).
+#
+#   1. cp .env.example .env      (e preencha os valores)
+#   2. docker compose up --build
+#   3. http://localhost:8080      (Swagger em http://localhost:8080/swagger)
+#
+# Ambiente de demonstração local: a API roda em "Development" para criar os usuários de teste
+# e os chamados de exemplo. Os segredos vêm do arquivo .env, que não vai para o Git.
+
+name: jphelpdesk
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD:?Defina SQL_SA_PASSWORD no arquivo .env}
+    volumes:
+      - sqlserver-dados:/var/opt/mssql
+    # Sem porta publicada: o banco só é acessível pela rede interna do compose.
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -b -Q 'SELECT 1' > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    mem_limit: 2g
+    restart: unless-stopped
+
+  api:
+    build: ./backend/JpHelpDesk.Api
+    depends_on:
+      sqlserver:
+        condition: service_healthy # só sobe quando o SQL Server já aceita conexões
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # Atrás do nginx: usa o IP original (X-Forwarded-For) no limite de tentativas de login.
+      # Seguro aqui porque a API não tem porta publicada — só o nginx fala com ela.
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=JpHelpDesk;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True"
+      Banco__AplicarMigracoesNaInicializacao: "true"
+      Jwt__ChaveSecreta: ${JWT_CHAVE_SECRETA:?Defina JWT_CHAVE_SECRETA no arquivo .env}
+      Seed__SenhaUsuariosTeste: ${SENHA_USUARIOS_TESTE:?Defina SENHA_USUARIOS_TESTE no arquivo .env}
+      Seed__ChamadosDemonstracao: "true"
+    restart: unless-stopped
+
+  web:
+    build: ./frontend/jp-help-desk
+    depends_on:
+      - api
+    ports:
+      - "${PORTA_WEB:-8080}:8080"
+    restart: unless-stopped
+
+volumes:
+  sqlserver-dados:
