@@ -12,7 +12,8 @@ export function mensagemErro(erro: unknown, padrao = MENSAGEM_PADRAO): string {
     return padrao;
   }
 
-  if (erro.status === 0) {
+  // 0 = sem resposta (rede/CORS); 502/503/504 = servidor ou proxy indisponível.
+  if (erro.status === 0 || [502, 503, 504].includes(erro.status)) {
     return 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.';
   }
 

@@ -1,0 +1,66 @@
+.grafico {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grafico__linha {
+  display: grid;
+  grid-template-columns: minmax(96px, 34%) 1fr 64px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--jp-content-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--jp-primary);
+    outline-offset: -2px;
+  }
+}
+
+.grafico__rotulo {
+  overflow: hidden;
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.grafico__trilho {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--jp-content-bg);
+  overflow: hidden;
+}
+
+.grafico__barra {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 999px;
+  transition: width 400ms ease;
+}
+
+.grafico__valor {
+  font-weight: 600;
+  text-align: right;
+
+  small {
+    margin-left: 4px;
+    color: var(--jp-text-muted);
+    font-weight: 400;
+  }
+}
+
+.grafico__vazio {
+  padding: 8px;
+  color: var(--jp-text-muted);
+}

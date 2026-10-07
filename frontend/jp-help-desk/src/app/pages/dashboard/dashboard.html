@@ -1,8 +1,97 @@
 <div class="page-header">
   <div>
-    <h1>Dashboard</h1>
-    <p>Vis&atilde;o geral dos chamados.</p>
+    <h1>Olá, {{ primeiroNome() }}</h1>
+    <p>{{ ehEquipe() ? 'Visão geral de todos os chamados.' : 'Acompanhe os chamados que você abriu.' }}</p>
   </div>
+  <button mat-stroked-button type="button" (click)="dashboard.reload()" [disabled]="dashboard.isLoading()">
+    <mat-icon>refresh</mat-icon>
+    Atualizar
+  </button>
 </div>
 
-<div class="card">Tela em constru&ccedil;&atilde;o &mdash; ser&aacute; implementada na Fase 13.</div>
+@if (dashboard.error()) {
+  <div class="card estado" role="alert">
+    <mat-icon class="estado__icone estado__icone--erro" aria-hidden="true">cloud_off</mat-icon>
+    <h2>Não foi possível carregar o dashboard</h2>
+    <p>{{ mensagemErro() }}</p>
+    <button mat-flat-button type="button" (click)="dashboard.reload()">Tentar novamente</button>
+  </div>
+} @else if (dashboard.hasValue()) {
+  @let dados = dashboard.value();
+
+  @if (dados.resumo.total === 0) {
+    <div class="card estado">
+      <mat-icon class="estado__icone" aria-hidden="true">inbox</mat-icon>
+      <h2>Nenhum chamado por aqui ainda</h2>
+      <p>Quando houver chamados, os indicadores aparecerão neste painel.</p>
+      <a mat-flat-button routerLink="/chamados/novo">Abrir o primeiro chamado</a>
+    </div>
+  } @else {
+    <section class="indicadores" aria-label="Indicadores">
+      @for (card of cards(); track card.titulo) {
+        <a class="card indicador" routerLink="/chamados" [queryParams]="card.filtro">
+          <span class="indicador__icone" [style.color]="card.cor" aria-hidden="true">
+            <mat-icon>{{ card.icone }}</mat-icon>
+          </span>
+          <span class="indicador__valor">{{ card.valor }}</span>
+          <span class="indicador__titulo">{{ card.titulo }}</span>
+        </a>
+      }
+    </section>
+
+    <section class="graficos">
+      <div class="card">
+        <h2 class="secao-titulo">Por status</h2>
+        <app-grafico-barras [itens]="graficoStatus()" />
+      </div>
+      <div class="card">
+        <h2 class="secao-titulo">Por prioridade</h2>
+        <app-grafico-barras [itens]="graficoPrioridade()" />
+      </div>
+      <div class="card">
+        <h2 class="secao-titulo">Por categoria</h2>
+        <app-grafico-barras [itens]="graficoCategoria()" />
+      </div>
+    </section>
+
+    <section class="card recentes">
+      <div class="recentes__cabecalho">
+        <h2 class="secao-titulo">Chamados recentes</h2>
+        <a mat-button routerLink="/chamados">Ver todos</a>
+      </div>
+
+      <ul class="recentes__lista" role="list">
+        @for (chamado of dados.recentes; track chamado.id) {
+          <li>
+            <a class="recente" [routerLink]="['/chamados', chamado.id]">
+              <span class="recente__id">#{{ chamado.id }}</span>
+              <span class="recente__info">
+                <span class="recente__titulo">{{ chamado.titulo }}</span>
+                <span class="recente__meta">
+                  {{ chamado.categoria.nome }} · {{ chamado.solicitante.nome }} ·
+                  {{ chamado.dataAbertura | date: 'dd/MM/yyyy HH:mm' }}
+                </span>
+              </span>
+              <span class="recente__badges">
+                <app-prioridade-badge [prioridade]="chamado.prioridade" />
+                <app-status-badge [status]="chamado.status" />
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+} @else {
+  <!-- Carregando: esqueleto com o formato da página -->
+  <div class="indicadores" aria-busy="true" aria-label="Carregando indicadores">
+    @for (i of [1, 2, 3, 4, 5]; track i) {
+      <div class="card indicador esqueleto"></div>
+    }
+  </div>
+  <div class="graficos">
+    @for (i of [1, 2, 3]; track i) {
+      <div class="card esqueleto esqueleto--grafico"></div>
+    }
+  </div>
+}

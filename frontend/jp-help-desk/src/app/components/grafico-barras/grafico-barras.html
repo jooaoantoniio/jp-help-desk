@@ -1,0 +1,23 @@
+<ul class="grafico" role="list">
+  @for (barra of barras(); track barra.rotulo) {
+    <li class="grafico__item">
+      <a
+        class="grafico__linha"
+        routerLink="/chamados"
+        [queryParams]="barra.filtro"
+        [attr.aria-label]="barra.rotulo + ': ' + barra.valor + ' chamados (' + barra.percentual + '%)'"
+      >
+        <span class="grafico__rotulo">{{ barra.rotulo }}</span>
+        <span class="grafico__trilho" aria-hidden="true">
+          <span class="grafico__barra" [style.width.%]="barra.largura" [style.background]="barra.cor"></span>
+        </span>
+        <span class="grafico__valor" aria-hidden="true">
+          {{ barra.valor }}
+          <small>{{ barra.percentual }}%</small>
+        </span>
+      </a>
+    </li>
+  } @empty {
+    <li class="grafico__vazio">Sem dados para exibir.</li>
+  }
+</ul>
