@@ -1,4 +1,4 @@
-using System.Text.Json;
+using JpHelpDesk.Api.Models.Enums;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace JpHelpDesk.Api.Data.Converters;
@@ -8,6 +8,6 @@ namespace JpHelpDesk.Api.Data.Converters;
 /// e converte de volta ao ler do banco.
 /// </summary>
 public class UpperSnakeCaseEnumConverter<TEnum>() : ValueConverter<TEnum, string>(
-    value => JsonNamingPolicy.SnakeCaseUpper.ConvertName(value.ToString()),
+    value => value.ToApiString(),
     text => Enum.Parse<TEnum>(text.Replace("_", string.Empty), true))
     where TEnum : struct, Enum;
