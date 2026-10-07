@@ -1,8 +1,223 @@
 <div class="page-header">
   <div>
     <h1>Chamados</h1>
-    <p>Pesquise e acompanhe os chamados.</p>
+    <p>{{ ehUsuario() ? 'Acompanhe os chamados que você abriu.' : 'Pesquise e acompanhe os chamados de suporte.' }}</p>
   </div>
 </div>
 
-<div class="card">Tela em constru&ccedil;&atilde;o &mdash; ser&aacute; implementada na Fase 14.</div>
+<!-- ---------- Filtros ---------- -->
+<form class="card filtros" [formGroup]="form" (ngSubmit)="filtrar()">
+  <div class="filtros__linha">
+    <mat-form-field appearance="outline" class="filtros__busca" subscriptSizing="dynamic">
+      <mat-label>Buscar pelo título</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput formControlName="titulo" />
+    </mat-form-field>
+    <button mat-flat-button type="submit">Buscar</button>
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="filtrosAbertos.update((aberto) => !aberto)"
+      [attr.aria-expanded]="filtrosAbertos()"
+      aria-controls="filtros-avancados"
+    >
+      <mat-icon>tune</mat-icon>
+      Filtros{{ totalFiltros() ? ' (' + totalFiltros() + ')' : '' }}
+    </button>
+  </div>
+
+  @if (filtrosAbertos()) {
+    <div id="filtros-avancados" class="filtros__avancados">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Nº do chamado</mat-label>
+        <input matInput type="number" min="1" formControlName="id" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option [value]="null">Todos</mat-option>
+          @for (opcao of opcoesStatus; track opcao[0]) {
+            <mat-option [value]="opcao[0]">{{ opcao[1] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Prioridade</mat-label>
+        <mat-select formControlName="prioridade">
+          <mat-option [value]="null">Todas</mat-option>
+          @for (opcao of opcoesPrioridade; track opcao[0]) {
+            <mat-option [value]="opcao[0]">{{ opcao[1] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Categoria</mat-label>
+        <mat-select formControlName="categoriaId">
+          <mat-option [value]="null">Todas</mat-option>
+          @for (categoria of categorias(); track categoria.id) {
+            <mat-option [value]="categoria.id">{{ categoria.nome }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (ehAdmin()) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Solicitante</mat-label>
+          <mat-select formControlName="solicitanteId">
+            <mat-option [value]="null">Todos</mat-option>
+            @for (usuario of usuarios(); track usuario.id) {
+              <mat-option [value]="usuario.id">{{ usuario.nome }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Técnico</mat-label>
+          <mat-select formControlName="tecnicoId">
+            <mat-option [value]="null">Todos</mat-option>
+            @for (tecnico of equipe(); track tecnico.id) {
+              <mat-option [value]="tecnico.id">{{ tecnico.nome }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Aberto de</mat-label>
+        <input matInput type="date" formControlName="de" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Aberto até</mat-label>
+        <input matInput type="date" formControlName="ate" />
+      </mat-form-field>
+
+      @if (ehTecnico()) {
+        <mat-checkbox formControlName="atribuidosAMim" class="filtros__checkbox">Somente atribuídos a mim</mat-checkbox>
+      }
+
+      <div class="filtros__acoes">
+        <button mat-button type="button" (click)="limpar()" [disabled]="totalFiltros() === 0">Limpar filtros</button>
+        <button mat-flat-button type="submit">Aplicar filtros</button>
+      </div>
+    </div>
+  }
+</form>
+
+<!-- ---------- Resultados ---------- -->
+<section class="card resultados" aria-live="polite">
+  @if (chamados.isLoading()) {
+    <mat-progress-bar mode="indeterminate" class="resultados__progresso" />
+  }
+
+  @if (chamados.error()) {
+    <div class="resultados__estado" role="alert">
+      <mat-icon aria-hidden="true">cloud_off</mat-icon>
+      <p>{{ mensagemErro() }}</p>
+      <button mat-stroked-button type="button" (click)="chamados.reload()">Tentar novamente</button>
+    </div>
+  } @else if (chamados.hasValue()) {
+    @let pagina = chamados.value();
+
+    @if (pagina.totalItens === 0) {
+      <div class="resultados__estado">
+        <mat-icon aria-hidden="true">search_off</mat-icon>
+        <p>{{ totalFiltros() ? 'Nenhum chamado encontrado com esses filtros.' : 'Nenhum chamado cadastrado ainda.' }}</p>
+        @if (totalFiltros()) {
+          <button mat-stroked-button type="button" (click)="limpar()">Limpar filtros</button>
+        }
+      </div>
+    } @else if (ehMobile()) {
+      <!-- Mobile: um card por chamado -->
+      <ul class="cartoes" role="list">
+        @for (chamado of pagina.itens; track chamado.id) {
+          <li>
+            <a class="cartao" [routerLink]="['/chamados', chamado.id]">
+              <span class="cartao__topo">
+                <span class="cartao__id">#{{ chamado.id }}</span>
+                <app-status-badge [status]="chamado.status" />
+              </span>
+              <span class="cartao__titulo">{{ chamado.titulo }}</span>
+              <span class="cartao__meta">{{ chamado.categoria.nome }} · {{ chamado.dataAbertura | date: 'dd/MM/yyyy HH:mm' }}</span>
+              <span class="cartao__meta">
+                <app-prioridade-badge [prioridade]="chamado.prioridade" />
+                {{ chamado.tecnico?.nome ?? 'Sem técnico' }}
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <!-- Desktop: tabela ordenável -->
+      <div class="tabela">
+        <table
+          mat-table
+          [dataSource]="pagina.itens"
+          matSort
+          [matSortActive]="colunaOrdenada()"
+          [matSortDirection]="filtro().decrescente ? 'desc' : 'asc'"
+          (matSortChange)="ordenar($event)"
+        >
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Nº</th>
+            <td mat-cell *matCellDef="let c" class="tabela__id">#{{ c.id }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="titulo">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Título</th>
+            <td mat-cell *matCellDef="let c">
+              <a class="tabela__link" [routerLink]="['/chamados', c.id]">{{ c.titulo }}</a>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let c"><app-status-badge [status]="c.status" /></td>
+          </ng-container>
+
+          <ng-container matColumnDef="prioridade">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Prioridade</th>
+            <td mat-cell *matCellDef="let c"><app-prioridade-badge [prioridade]="c.prioridade" /></td>
+          </ng-container>
+
+          <ng-container matColumnDef="categoria">
+            <th mat-header-cell *matHeaderCellDef>Categoria</th>
+            <td mat-cell *matCellDef="let c">{{ c.categoria.nome }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="solicitante">
+            <th mat-header-cell *matHeaderCellDef>Solicitante</th>
+            <td mat-cell *matCellDef="let c">{{ c.solicitante.nome }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="tecnico">
+            <th mat-header-cell *matHeaderCellDef>Técnico</th>
+            <td mat-cell *matCellDef="let c" [class.tabela__vazio]="!c.tecnico">{{ c.tecnico?.nome ?? '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="dataAbertura">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Abertura</th>
+            <td mat-cell *matCellDef="let c" class="tabela__data">{{ c.dataAbertura | date: 'dd/MM/yyyy HH:mm' }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+          <tr mat-row *matRowDef="let c; columns: colunas" class="tabela__linha" [routerLink]="['/chamados', c.id]"></tr>
+        </table>
+      </div>
+    }
+
+    @if (pagina.totalItens > 0) {
+      <mat-paginator
+        [length]="pagina.totalItens"
+        [pageIndex]="filtro().pagina - 1"
+        [pageSize]="filtro().tamanhoPagina"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="paginar($event)"
+        aria-label="Paginação dos chamados"
+      />
+    }
+  }
+</section>
