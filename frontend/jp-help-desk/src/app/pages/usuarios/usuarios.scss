@@ -1,0 +1,19 @@
+@use 'listagem';
+
+.voce {
+  color: var(--jp-text-muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+// Mantém os botões alinhados na coluna quando a linha não tem a segunda ação.
+.acao-vazia {
+  display: inline-block;
+  width: 48px;
+}

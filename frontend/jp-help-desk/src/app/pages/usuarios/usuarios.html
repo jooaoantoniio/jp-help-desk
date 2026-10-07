@@ -1,8 +1,143 @@
 <div class="page-header">
   <div>
-    <h1>Usu&aacute;rios</h1>
-    <p>Gerenciamento de usu&aacute;rios do sistema.</p>
+    <h1>Usuários</h1>
+    <p>Cadastre pessoas e defina o que cada uma pode fazer no sistema.</p>
   </div>
+  <button mat-flat-button type="button" (click)="abrirFormulario()">
+    <mat-icon>person_add</mat-icon>
+    Novo usuário
+  </button>
 </div>
 
-<div class="card">Tela em constru&ccedil;&atilde;o &mdash; ser&aacute; implementada na Fase 15.</div>
+<div class="card filtros">
+  <mat-form-field appearance="outline" class="filtros__busca" subscriptSizing="dynamic">
+    <mat-label>Buscar por nome ou e-mail</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput [formControl]="busca" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Perfil</mat-label>
+    <mat-select [(value)]="perfil">
+      <mat-option [value]="null">Todos</mat-option>
+      @for (opcao of opcoesPerfil; track opcao[0]) {
+        <mat-option [value]="opcao[0]">{{ opcao[1] }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Situação</mat-label>
+    <mat-select [(value)]="situacao">
+      <mat-option value="todos">Todos</mat-option>
+      <mat-option value="ativos">Ativos</mat-option>
+      <mat-option value="inativos">Inativos</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<section class="card resultados" aria-live="polite">
+  @if (usuarios.isLoading()) {
+    <mat-progress-bar mode="indeterminate" class="resultados__progresso" />
+  }
+
+  @if (usuarios.error()) {
+    <div class="resultados__estado" role="alert">
+      <mat-icon aria-hidden="true">cloud_off</mat-icon>
+      <p>{{ mensagemErro() }}</p>
+      <button mat-stroked-button type="button" (click)="usuarios.reload()">Tentar novamente</button>
+    </div>
+  } @else if (usuarios.hasValue()) {
+    @let resultado = usuarios.value();
+
+    @if (resultado.totalItens === 0) {
+      <div class="resultados__estado">
+        <mat-icon aria-hidden="true">person_search</mat-icon>
+        <p>{{ filtrando() ? 'Nenhum usuário encontrado com esses filtros.' : 'Nenhum usuário cadastrado ainda.' }}</p>
+        @if (filtrando()) {
+          <button mat-stroked-button type="button" (click)="limparFiltros()">Limpar filtros</button>
+        }
+      </div>
+    } @else {
+      <div class="tabela">
+        <table mat-table [dataSource]="resultado.itens">
+          <ng-container matColumnDef="usuario">
+            <th mat-header-cell *matHeaderCellDef>Usuário</th>
+            <td mat-cell *matCellDef="let u">
+              <span class="tabela__principal">
+                {{ u.nome }}
+                @if (u.id === meuId()) {
+                  <span class="voce">(você)</span>
+                }
+              </span>
+              <span class="tabela__secundario">{{ u.email }}</span>
+              @if (ehMobile()) {
+                <span class="badges">
+                  <app-perfil-badge [perfil]="u.perfil" />
+                  <span class="badge" [class]="u.ativo ? 'situacao-ativo' : 'situacao-inativo'">{{ u.ativo ? 'Ativo' : 'Inativo' }}</span>
+                </span>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="perfil">
+            <th mat-header-cell *matHeaderCellDef>Perfil</th>
+            <td mat-cell *matCellDef="let u">
+              <app-perfil-badge [perfil]="u.perfil" />
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="situacao">
+            <th mat-header-cell *matHeaderCellDef>Situação</th>
+            <td mat-cell *matCellDef="let u">
+              <span class="badge" [class]="u.ativo ? 'situacao-ativo' : 'situacao-inativo'">{{ u.ativo ? 'Ativo' : 'Inativo' }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="criadoEm">
+            <th mat-header-cell *matHeaderCellDef>Cadastrado em</th>
+            <td mat-cell *matCellDef="let u" class="tabela__data">{{ u.criadoEm | date: 'dd/MM/yyyy' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef class="tabela__acoes"><span class="sr-only">Ações</span></th>
+            <td mat-cell *matCellDef="let u" class="tabela__acoes">
+              <div class="tabela__botoes">
+                <button mat-icon-button type="button" (click)="abrirFormulario(u)" matTooltip="Editar"
+                  [attr.aria-label]="'Editar ' + u.nome">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                @if (u.id === meuId()) {
+                  <!-- Desativar a própria conta encerraria a sessão na hora: não é oferecido. -->
+                  <span class="acao-vazia" aria-hidden="true"></span>
+                } @else if (u.ativo) {
+                  <button mat-icon-button type="button" (click)="desativar(u)" matTooltip="Desativar"
+                    [attr.aria-label]="'Desativar ' + u.nome">
+                    <mat-icon>person_off</mat-icon>
+                  </button>
+                } @else {
+                  <button mat-icon-button type="button" (click)="ativar(u)" matTooltip="Reativar"
+                    [attr.aria-label]="'Reativar ' + u.nome">
+                    <mat-icon>settings_backup_restore</mat-icon>
+                  </button>
+                }
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="colunas()"></tr>
+          <tr mat-row *matRowDef="let u; columns: colunas()" [class.tabela__inativa]="!u.ativo"></tr>
+        </table>
+      </div>
+
+      <mat-paginator
+        [length]="resultado.totalItens"
+        [pageIndex]="pagina() - 1"
+        [pageSize]="tamanhoPagina()"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="paginar($event)"
+        aria-label="Paginação dos usuários"
+      />
+    }
+  }
+</section>
