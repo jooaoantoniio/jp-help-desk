@@ -1,6 +1,7 @@
 @JpHelpDesk.Api_HostAddress = http://localhost:5288
 
-GET {{JpHelpDesk.Api_HostAddress}}/weatherforecast/
+### Health check
+GET {{JpHelpDesk.Api_HostAddress}}/api/health
 Accept: application/json
 
 ###
