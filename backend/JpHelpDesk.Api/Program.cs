@@ -1,14 +1,26 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using JpHelpDesk.Api.Data;
+using JpHelpDesk.Api.Data.Seed;
 using JpHelpDesk.Api.Exceptions;
 using JpHelpDesk.Api.Repositories;
 using JpHelpDesk.Api.Services;
+using JpHelpDesk.Api.Services.Security;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ---------- Serviços (injeção de dependência) ----------
 
-builder.Services.AddControllers();
+// Enums trafegam no JSON como texto UPPER_SNAKE_CASE (ex.: "EM_ATENDIMENTO"), iguais ao banco.
+// Números não são aceitos, para evitar valores inválidos como "perfil": 99.
+var enumConverter = new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper, allowIntegerValues: false);
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(enumConverter));
+
+// O gerador do OpenAPI lê estas opções para descrever os enums no Swagger.
+builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(enumConverter));
 
 // Banco de dados: a connection string vem da configuração do ambiente
 // (appsettings.Development.json em dev; variável de ambiente em produção).
@@ -20,9 +32,18 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn
 // Relógio do sistema injetável: facilita testar código que depende de data/hora.
 builder.Services.AddSingleton(TimeProvider.System);
 
+// Segurança: hash de senha (sem estado, pode ser Singleton).
+builder.Services.AddSingleton<ISenhaHasher, BCryptSenhaHasher>();
+
 // Repositórios e serviços (Scoped = uma instância por requisição HTTP).
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+
+// Seed de dados de desenvolvimento.
+builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOptions.Secao));
+builder.Services.AddScoped<DatabaseSeeder>();
 
 // Erros retornados no formato padrão ProblemDetails (RFC 9457).
 builder.Services.AddProblemDetails();
@@ -41,6 +62,15 @@ builder.Services.AddOpenApi(options =>
 });
 
 var app = builder.Build();
+
+// ---------- Inicialização ----------
+
+if (app.Environment.IsDevelopment())
+{
+    // Fora de uma requisição não existe escopo: criamos um para usar serviços Scoped.
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<DatabaseSeeder>().SeedAsync();
+}
 
 // ---------- Pipeline HTTP (a ordem dos middlewares importa) ----------
 
