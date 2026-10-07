@@ -1,5 +1,5 @@
 import { registerLocaleData } from '@angular/common';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import localePt from '@angular/common/locales/pt';
 import {
   ApplicationConfig,
@@ -8,10 +8,10 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
-import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MatIconRegistry } from '@angular/material/icon';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
+import { authInterceptor } from './interceptors/auth.interceptor';
 
 // Formatos brasileiros para datas e números (pipes date, number, currency).
 registerLocaleData(localePt);
@@ -21,10 +21,9 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     // withComponentInputBinding: parâmetros da rota (ex.: :id) chegam como input() no componente.
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withFetch()),
+    // Toda requisição passa pelo authInterceptor (token JWT + tratamento de sessão expirada).
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
-    // Campos de formulário do Material com contorno (visual de formulário corporativo).
-    { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } },
     // Ícones: usamos a fonte "Material Symbols Outlined" carregada no index.html.
     provideAppInitializer(() => {
       inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');

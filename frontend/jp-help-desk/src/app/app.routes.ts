@@ -1,17 +1,20 @@
 import { Routes } from '@angular/router';
-import { Shell } from './components/layout/shell/shell';
+import { authGuard, perfilGuard, visitanteGuard } from './guards/auth.guards';
 
 // Cada página é carregada sob demanda (lazy loading): o código só é baixado ao acessar a rota.
-// As rotas dentro do Shell recebem sidebar + header; o login fica fora dele.
+// As rotas dentro do Shell exigem login e recebem sidebar + header; o login fica fora dele.
 export const routes: Routes = [
   {
     path: 'login',
     title: 'Entrar | JP Help Desk',
+    canActivate: [visitanteGuard],
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
   },
   {
     path: '',
-    component: Shell,
+    canActivate: [authGuard],
+    // O layout também é lazy: a tela de login não precisa baixar sidebar, menu etc.
+    loadComponent: () => import('./components/layout/shell/shell').then((m) => m.Shell),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
@@ -42,11 +45,13 @@ export const routes: Routes = [
       {
         path: 'usuarios',
         title: 'Usuários | JP Help Desk',
+        canActivate: [perfilGuard('ADMIN')],
         loadComponent: () => import('./pages/usuarios/usuarios').then((m) => m.Usuarios),
       },
       {
         path: 'categorias',
         title: 'Categorias | JP Help Desk',
+        canActivate: [perfilGuard('ADMIN')],
         loadComponent: () => import('./pages/categorias/categorias').then((m) => m.Categorias),
       },
       {
