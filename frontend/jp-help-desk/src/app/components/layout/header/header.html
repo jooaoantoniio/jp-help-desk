@@ -12,23 +12,27 @@
     <span class="header__novo-texto">Novo chamado</span>
   </a>
 
-  <!-- Nome do usuário e logout serão ligados à autenticação na Fase 12. -->
   <button type="button" class="header__usuario" [matMenuTriggerFor]="menuUsuario" aria-label="Menu do usuário">
-    <span class="header__avatar" aria-hidden="true">
-      <mat-icon>person</mat-icon>
+    <span class="header__avatar" aria-hidden="true">{{ iniciais() }}</span>
+    <span class="header__identificacao">
+      <span class="header__nome">{{ usuario()?.nome }}</span>
+      <span class="header__perfil">{{ perfil() }}</span>
     </span>
-    <span class="header__nome">Usuário</span>
     <mat-icon class="header__seta" aria-hidden="true">expand_more</mat-icon>
   </button>
 
   <mat-menu #menuUsuario="matMenu" xPosition="before">
+    <div class="header__menu-info">
+      <strong>{{ usuario()?.nome }}</strong>
+      <span>{{ usuario()?.email }}</span>
+    </div>
     <a mat-menu-item routerLink="/perfil">
       <mat-icon>person</mat-icon>
       <span>Meu perfil</span>
     </a>
-    <a mat-menu-item routerLink="/login">
+    <button mat-menu-item type="button" (click)="sair()">
       <mat-icon>logout</mat-icon>
       <span>Sair</span>
-    </a>
+    </button>
   </mat-menu>
 </header>

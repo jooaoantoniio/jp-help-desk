@@ -1,8 +1,67 @@
 <main class="login">
-  <div class="card login__card">
-    <span class="login__logo" aria-hidden="true">JP</span>
-    <h1>JP Help Desk</h1>
-    <p>Tela de login em construção — será implementada na Fase 12.</p>
-    <a routerLink="/dashboard">Entrar (provisório)</a>
-  </div>
+  <section class="login__card" aria-labelledby="login-titulo">
+    @if (carregando()) {
+      <mat-progress-bar class="login__progresso" mode="indeterminate" />
+    }
+
+    <header class="login__cabecalho">
+      <span class="login__logo" aria-hidden="true">JP</span>
+      <h1 id="login-titulo">JP Help Desk</h1>
+      <p>Entre com sua conta para acessar os chamados.</p>
+    </header>
+
+    @if (motivo() === 'expirada') {
+      <div class="login__alerta login__alerta--info" role="status">
+        <mat-icon aria-hidden="true">schedule</mat-icon>
+        Sua sessão expirou. Entre novamente para continuar.
+      </div>
+    }
+
+    @if (erro(); as mensagem) {
+      <div class="login__alerta login__alerta--erro" role="alert">
+        <mat-icon aria-hidden="true">error</mat-icon>
+        {{ mensagem }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="entrar()" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>E-mail</mat-label>
+        <input matInput formControlName="email" type="email" autocomplete="username" />
+        <mat-icon matPrefix>mail</mat-icon>
+        @if (form.controls.email.hasError('required')) {
+          <mat-error>Informe o e-mail.</mat-error>
+        } @else if (form.controls.email.hasError('email')) {
+          <mat-error>Informe um e-mail válido.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Senha</mat-label>
+        <input
+          matInput
+          formControlName="senha"
+          [type]="mostrarSenha() ? 'text' : 'password'"
+          autocomplete="current-password"
+        />
+        <mat-icon matPrefix>lock</mat-icon>
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          [attr.aria-label]="mostrarSenha() ? 'Ocultar senha' : 'Mostrar senha'"
+          (click)="mostrarSenha.update((valor) => !valor)"
+        >
+          <mat-icon>{{ mostrarSenha() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (form.controls.senha.hasError('required')) {
+          <mat-error>Informe a senha.</mat-error>
+        }
+      </mat-form-field>
+
+      <button mat-flat-button class="login__entrar" type="submit" [disabled]="carregando()">
+        {{ carregando() ? 'Entrando...' : 'Entrar' }}
+      </button>
+    </form>
+  </section>
 </main>

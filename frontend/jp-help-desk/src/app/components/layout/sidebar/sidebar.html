@@ -5,7 +5,7 @@
   </a>
 
   <nav class="sidebar__nav" aria-label="Menu principal">
-    @for (item of itens; track item.rota) {
+    @for (item of itens(); track item.rota) {
       <a
         class="sidebar__item"
         [routerLink]="item.rota"
