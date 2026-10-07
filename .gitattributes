@@ -4,6 +4,7 @@
 # Scripts executados em Linux/containers devem manter LF
 *.sh text eol=lf
 Dockerfile text eol=lf
+nginx.conf text eol=lf
 
 # Arquivos de solução do Visual Studio usam CRLF
 *.sln text eol=crlf
