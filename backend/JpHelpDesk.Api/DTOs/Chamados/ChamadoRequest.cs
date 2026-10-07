@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using JpHelpDesk.Api.DTOs.Common;
 using JpHelpDesk.Api.Models.Enums;
 
 namespace JpHelpDesk.Api.DTOs.Chamados;
@@ -10,12 +11,12 @@ public class ChamadoRequest
 {
     /// <example>Impressora do financeiro não imprime</example>
     [Required(ErrorMessage = "O título é obrigatório.")]
-    [StringLength(150, MinimumLength = 5, ErrorMessage = "O título deve ter entre 5 e 150 caracteres.")]
+    [TamanhoTexto(150, MinimumLength = 5, ErrorMessage = "O título deve ter entre 5 e 150 caracteres.")]
     public string Titulo { get; set; } = string.Empty;
 
     /// <example>Ao enviar qualquer documento, a impressora exibe "erro de papel" mesmo com a bandeja cheia.</example>
     [Required(ErrorMessage = "A descrição é obrigatória.")]
-    [StringLength(4000, MinimumLength = 10, ErrorMessage = "A descrição deve ter entre 10 e 4000 caracteres.")]
+    [TamanhoTexto(4000, MinimumLength = 10, ErrorMessage = "A descrição deve ter entre 10 e 4000 caracteres.")]
     public string Descricao { get; set; } = string.Empty;
 
     /// <summary>Prioridade: BAIXA, MEDIA, ALTA ou CRITICA.</summary>

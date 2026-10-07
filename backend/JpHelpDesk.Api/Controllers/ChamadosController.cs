@@ -12,7 +12,6 @@ namespace JpHelpDesk.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/chamados")]
-[Produces("application/json")]
 public class ChamadosController(IChamadoService chamadoService) : ControllerBase
 {
     /// <summary>

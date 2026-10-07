@@ -25,6 +25,9 @@ public class GlobalExceptionHandler(
             AppException e => (e.StatusCode, e.Titulo, e.Message),
             DbUpdateException { InnerException: SqlException { Number: SqlErroIndiceUnico or SqlErroChaveDuplicada } } =>
                 (StatusCodes.Status409Conflict, "Conflito", "O registro viola uma restrição de unicidade."),
+            // Requisição que o servidor não conseguiu ler (ex.: corpo truncado ou grande demais): erro do cliente, não 500.
+            BadHttpRequestException e =>
+                (e.StatusCode, "Requisição inválida", "Não foi possível ler a requisição enviada."),
             _ => (StatusCodes.Status500InternalServerError, "Erro interno", "Ocorreu um erro inesperado ao processar a requisição.")
         };
 

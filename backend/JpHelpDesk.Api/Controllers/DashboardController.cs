@@ -9,7 +9,6 @@ namespace JpHelpDesk.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/dashboard")]
-[Produces("application/json")]
 public class DashboardController(IDashboardService dashboardService) : ControllerBase
 {
     /// <summary>

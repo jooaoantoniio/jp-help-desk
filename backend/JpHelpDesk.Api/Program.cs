@@ -4,11 +4,13 @@ using JpHelpDesk.Api.Data;
 using JpHelpDesk.Api.Data.Seed;
 using JpHelpDesk.Api.Exceptions;
 using JpHelpDesk.Api.Infrastructure.Authentication;
+using JpHelpDesk.Api.Infrastructure.ErrorHandling;
 using JpHelpDesk.Api.Infrastructure.ModelBinding;
 using JpHelpDesk.Api.Infrastructure.OpenApi;
 using JpHelpDesk.Api.Repositories;
 using JpHelpDesk.Api.Services;
 using JpHelpDesk.Api.Services.Security;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,8 +25,13 @@ builder.Services.AddControllers(options =>
     {
         // Enums na query string/rota no mesmo formato do JSON (ex.: ?status=EM_ATENDIMENTO).
         options.ModelBinderProviders.Insert(0, new UpperSnakeCaseEnumModelBinderProvider());
+
+        // A API só responde JSON: sem o formatter de texto, o OpenAPI também deixa de anunciar "text/plain".
+        options.OutputFormatters.RemoveType<StringOutputFormatter>();
     })
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(enumConverter));
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(enumConverter))
+    // Erros de validação (400) em português, com os nomes de campo do JSON e sem expor tipos internos.
+    .ConfigurarRespostasDeValidacao();
 
 // O gerador do OpenAPI lê estas opções para descrever os enums no Swagger.
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(enumConverter));
@@ -59,8 +66,8 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOptions.Secao));
 builder.Services.AddScoped<DatabaseSeeder>();
 
-// Erros retornados no formato padrão ProblemDetails (RFC 9457).
-builder.Services.AddProblemDetails();
+// Erros retornados no formato padrão ProblemDetails (RFC 9457), com título e detalhe em português.
+builder.Services.AddRespostasDeErro();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Documento OpenAPI nativo do .NET (servido em /openapi/v1.json).
@@ -76,6 +83,9 @@ builder.Services.AddOpenApi(options =>
 
     // Botão "Authorize" do Swagger para enviar o token JWT.
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+
+    // Sucesso em application/json e erros em application/problem+json, como a API responde de fato.
+    options.AddOperationTransformer<TiposDeConteudoTransformer>();
 });
 
 var app = builder.Build();

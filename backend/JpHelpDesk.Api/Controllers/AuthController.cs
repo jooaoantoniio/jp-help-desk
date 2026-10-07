@@ -13,7 +13,6 @@ namespace JpHelpDesk.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/auth")]
-[Produces("application/json")]
 public class AuthController(IAuthService authService) : ControllerBase
 {
     /// <summary>

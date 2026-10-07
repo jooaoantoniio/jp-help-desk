@@ -10,7 +10,6 @@ namespace JpHelpDesk.Api.Controllers;
 [ApiController]
 [AllowAnonymous]
 [Route("api/health")]
-[Produces("application/json")]
 public class HealthController(IWebHostEnvironment environment, TimeProvider timeProvider) : ControllerBase
 {
     /// <summary>

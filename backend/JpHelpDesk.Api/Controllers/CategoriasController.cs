@@ -12,7 +12,6 @@ namespace JpHelpDesk.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/categorias")]
-[Produces("application/json")]
 [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
 public class CategoriasController(ICategoriaService categoriaService) : ControllerBase
 {

@@ -12,7 +12,6 @@ namespace JpHelpDesk.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/usuarios")]
-[Produces("application/json")]
 [Authorize(Policy = Politicas.Admin)]
 [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
