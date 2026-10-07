@@ -1,0 +1,9 @@
+# Normaliza quebras de linha: LF no repositório, nativo no checkout
+* text=auto
+
+# Scripts executados em Linux/containers devem manter LF
+*.sh text eol=lf
+Dockerfile text eol=lf
+
+# Arquivos de solução do Visual Studio usam CRLF
+*.sln text eol=crlf
