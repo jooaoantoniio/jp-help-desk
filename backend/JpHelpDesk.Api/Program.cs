@@ -1,8 +1,18 @@
+using JpHelpDesk.Api.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ---------- Serviços (injeção de dependência) ----------
 
 builder.Services.AddControllers();
+
+// Banco de dados: a connection string vem da configuração do ambiente
+// (appsettings.Development.json em dev; variável de ambiente em produção).
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' não configurada.");
+
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
 // Relógio do sistema injetável: facilita testar código que depende de data/hora.
 builder.Services.AddSingleton(TimeProvider.System);
