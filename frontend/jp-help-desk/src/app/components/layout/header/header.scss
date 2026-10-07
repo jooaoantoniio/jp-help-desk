@@ -1,0 +1,82 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--jp-header-height);
+  padding: 0 24px;
+  background: var(--jp-surface);
+  border-bottom: 1px solid var(--jp-border);
+
+  @media (max-width: 599.98px) {
+    gap: 4px;
+    padding: 0 8px 0 4px;
+  }
+}
+
+.header__espaco {
+  flex: 1;
+}
+
+// No mobile o botão "Novo chamado" mostra apenas o ícone.
+.header__novo-texto {
+  @media (max-width: 599.98px) {
+    display: none;
+  }
+}
+
+.header__novo {
+  @media (max-width: 599.98px) {
+    min-width: 0;
+    padding: 0 12px;
+
+    mat-icon {
+      margin: 0;
+    }
+  }
+}
+
+.header__usuario {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 4px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--jp-text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--jp-content-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--jp-primary);
+    outline-offset: 2px;
+  }
+}
+
+.header__avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--jp-content-bg);
+  color: var(--jp-primary);
+}
+
+.header__seta {
+  color: var(--jp-text-muted);
+}
+
+.header__nome {
+  @media (max-width: 599.98px) {
+    display: none;
+  }
+}

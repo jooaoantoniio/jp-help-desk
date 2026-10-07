@@ -1,0 +1,16 @@
+.nao-encontrada {
+  max-width: 480px;
+  margin: 48px auto;
+  text-align: center;
+
+  p {
+    color: var(--jp-text-muted);
+  }
+}
+
+.nao-encontrada__icone {
+  width: 48px;
+  height: 48px;
+  font-size: 48px;
+  color: var(--jp-text-muted);
+}

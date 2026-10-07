@@ -1,0 +1,34 @@
+<header class="header">
+  @if (mostrarBotaoMenu()) {
+    <button mat-icon-button type="button" aria-label="Abrir menu" (click)="alternarMenu.emit()">
+      <mat-icon>menu</mat-icon>
+    </button>
+  }
+
+  <span class="header__espaco"></span>
+
+  <a mat-flat-button routerLink="/chamados/novo" class="header__novo" aria-label="Novo chamado">
+    <mat-icon>add</mat-icon>
+    <span class="header__novo-texto">Novo chamado</span>
+  </a>
+
+  <!-- Nome do usuário e logout serão ligados à autenticação na Fase 12. -->
+  <button type="button" class="header__usuario" [matMenuTriggerFor]="menuUsuario" aria-label="Menu do usuário">
+    <span class="header__avatar" aria-hidden="true">
+      <mat-icon>person</mat-icon>
+    </span>
+    <span class="header__nome">Usuário</span>
+    <mat-icon class="header__seta" aria-hidden="true">expand_more</mat-icon>
+  </button>
+
+  <mat-menu #menuUsuario="matMenu" xPosition="before">
+    <a mat-menu-item routerLink="/perfil">
+      <mat-icon>person</mat-icon>
+      <span>Meu perfil</span>
+    </a>
+    <a mat-menu-item routerLink="/login">
+      <mat-icon>logout</mat-icon>
+      <span>Sair</span>
+    </a>
+  </mat-menu>
+</header>

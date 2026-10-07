@@ -1,0 +1,23 @@
+<div class="sidebar">
+  <a class="sidebar__marca" routerLink="/dashboard" (click)="navegou.emit()">
+    <span class="sidebar__logo" aria-hidden="true">JP</span>
+    <span class="sidebar__nome">Help Desk</span>
+  </a>
+
+  <nav class="sidebar__nav" aria-label="Menu principal">
+    @for (item of itens; track item.rota) {
+      <a
+        class="sidebar__item"
+        [routerLink]="item.rota"
+        routerLinkActive="sidebar__item--ativo"
+        ariaCurrentWhenActive="page"
+        (click)="navegou.emit()"
+      >
+        <mat-icon aria-hidden="true">{{ item.icone }}</mat-icon>
+        <span>{{ item.rotulo }}</span>
+      </a>
+    }
+  </nav>
+
+  <p class="sidebar__rodape">JP Help Desk · v1.0</p>
+</div>

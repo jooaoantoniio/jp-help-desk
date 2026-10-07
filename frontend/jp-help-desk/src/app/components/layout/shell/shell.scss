@@ -1,0 +1,30 @@
+.shell {
+  height: 100vh;
+  background: var(--jp-content-bg);
+}
+
+.shell__sidenav {
+  width: var(--jp-sidebar-width);
+  border-right: none;
+  border-radius: 0;
+  background: var(--jp-sidebar-bg);
+}
+
+.shell__conteudo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; // permite encolher abaixo da largura do conteúdo (evita estouro horizontal no mobile)
+  background: var(--jp-content-bg);
+}
+
+.shell__pagina {
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+
+  @media (max-width: 599.98px) {
+    padding: 16px;
+  }
+}

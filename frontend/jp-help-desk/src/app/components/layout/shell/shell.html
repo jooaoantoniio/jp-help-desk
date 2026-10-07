@@ -1,0 +1,17 @@
+<mat-sidenav-container class="shell">
+  <mat-sidenav
+    class="shell__sidenav"
+    [mode]="ehMobile() ? 'over' : 'side'"
+    [opened]="!ehMobile() || menuMobileAberto()"
+    (closedStart)="fecharMenuMobile()"
+  >
+    <app-sidebar (navegou)="fecharMenuMobile()" />
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell__conteudo">
+    <app-header [mostrarBotaoMenu]="ehMobile()" (alternarMenu)="alternarMenu()" />
+    <main class="shell__pagina">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
