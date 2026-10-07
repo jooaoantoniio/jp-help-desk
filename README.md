@@ -1,5 +1,7 @@
 # JP Help Desk
 
+[![CI](https://github.com/jooaoantoniio/jp-help-desk/actions/workflows/ci.yml/badge.svg)](https://github.com/jooaoantoniio/jp-help-desk/actions/workflows/ci.yml)
+
 Sistema de **Service Desk de TI** para abrir, atribuir, acompanhar e encerrar chamados de suporte técnico, com
 perfis de acesso, histórico completo de cada chamado e um dashboard com os indicadores do atendimento.
 
@@ -280,7 +282,7 @@ cd frontend/jp-help-desk && npx ng test --watch=false       # 58 testes
 
 ## Roadmap
 
-- [ ] Pipeline de CI no GitHub Actions (build, testes e imagens Docker)
+- [x] Pipeline de CI no GitHub Actions (build, testes, imagens Docker e smoke test do docker-compose)
 - [ ] Deploy público da aplicação
 - [ ] Textos do histórico com rótulos amigáveis (hoje: "de ABERTO para EM_ATENDIMENTO")
 - [ ] Notificações por e-mail ao solicitante a cada mudança de status
